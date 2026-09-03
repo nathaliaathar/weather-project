@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shoot Window — pair playbook</title>
+  <style>
+    :root {
+      --navy: #12323c;
+      --gold: #c47b2b;
+      --cream: #fff8f0;
+      --sand: #f4ece1;
+      --teal: #1f7a6c;
+      --coral: #c45c3e;
+      --ink: #1b1f24;
+      --muted: #5c656c;
+      --line: #e4d8c8;
+      --a: #1b4f63;
+      --b: #8a4a16;
+      --ok: #1f7a6c;
+      --warn: #c47b2b;
+      --danger: #c45c3e;
+      --info: #1b4f63;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    a { color: var(--a); }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 64px; }
+    header.hero {
+      background: var(--navy);
+      color: #fff;
+      border-radius: 12px;
+      padding: 28px 28px 24px;
+    }
+    header.hero h1 { margin: 0 0 8px; font-size: 28px; font-weight: 700; }
+    header.hero p { margin: 0; color: #d7e0e3; max-width: 46rem; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0 0;
+    }
+    .stat {
+      background: var(--sand);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .stat b { display: block; font-size: 20px; color: var(--navy); }
+    .stat span { color: var(--muted); font-size: 12px; }
+    nav.tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 20px 0 22px;
+    }
+    nav.tabs button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 7px 14px;
+      cursor: pointer;
+      font: inherit;
+    }
+    nav.tabs button[aria-selected="true"] {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+    h2 { font-size: 20px; margin: 28px 0 10px; }
+    h3 { font-size: 16px; margin: 22px 0 8px; }
+    p { margin: 0 0 12px; }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin: 8px 0 16px;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th { background: var(--sand); font-weight: 600; }
+    tr:nth-child(even) td { background: #fffdf9; }
+    details {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin: 8px 0;
+    }
+    details summary { cursor: pointer; font-weight: 600; }
+    details p { margin: 8px 0 0; }
+    .callout {
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin: 12px 0 16px;
+      background: #fff;
+      border-left: 4px solid var(--info);
+    }
+    .callout.warn { border-left-color: var(--warn); }
+    .callout.ok { border-left-color: var(--ok); }
+    .callout.danger { border-left-color: var(--danger); }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 12px;
+      margin: 12px 0 16px;
+    }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .card h3 { margin-top: 0; }
+    .pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--sand);
+      color: var(--navy);
+      font-weight: 600;
+    }
+    .pill.a { background: #d7e8ee; color: var(--a); }
+    .pill.b { background: #f3e0d0; color: var(--b); }
+    .bar {
+      display: flex;
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 8px 0 4px;
+    }
+    .bar span { display: block; height: 100%; }
+    .bar .a { width: 45%; background: var(--a); }
+    .bar .b { width: 35%; background: var(--gold); }
+    .bar .s { width: 20%; background: var(--teal); }
+    .metric {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .metric b { display: block; font-size: 26px; color: var(--teal); }
+    .metric span { color: var(--muted); font-size: 13px; }
+    svg.chart { width: 100%; height: 180px; background: #fff; border: 1px solid var(--line); border-radius: 8px; }
+    .todo {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 8px 0;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+    .todo:hover { background: #fffdf8; }
+    .mark {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--muted);
+      border-radius: 50%;
+      margin-top: 4px;
+    }
+    .todo.in_progress .mark { border-color: var(--gold); background: #f4d7a8; }
+    .todo.completed .mark { border-color: var(--teal); background: var(--teal); }
+    .todo.completed { opacity: 0.72; }
+    .todo.completed p { text-decoration: line-through; }
+    .todo p { margin: 0; font-size: 14px; }
+    footer.note { margin-top: 28px; font-size: 13px; color: var(--muted); }
+    [hidden] { display: none !important; }
+    @media (max-width: 760px) {
+      .stats, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      header.hero { padding: 20px; }
+    }
+    @media print {
+      nav.tabs, .todo { break-inside: avoid; }
+      header.hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>Shoot Window — pair playbook</h1>
+      <p>Nathalia and Dafna: a step-by-step board for your photography decision tool. Weather is the input. The Photography Score is the product. Start on this tab. Tick tasks on Checklist.</p>
+    </header>
+
+    <div class="stats">
+      <div class="stat"><b id="done-stat">0/25</b><span>Tasks done</span></div>
+      <div class="stat"><b>12</b><span>Work steps</span></div>
+      <div class="stat"><b>A+B</b><span>Nathalia and Dafna</span></div>
+      <div class="stat"><b>Score</b><span>Product: 0–100 + best window</span></div>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="overview" aria-selected="true">Start here</button>
+      <button type="button" role="tab" data-tab="split" aria-selected="false">Split</button>
+      <button type="button" role="tab" data-tab="steps" aria-selected="false">12 steps</button>
+      <button type="button" role="tab" data-tab="files" aria-selected="false">Files</button>
+      <button type="button" role="tab" data-tab="mockup" aria-selected="false">Page mockup</button>
+      <button type="button" role="tab" data-tab="inspo" aria-selected="false">Inspiration</button>
+      <button type="button" role="tab" data-tab="check" aria-selected="false">Checklist</button>
+    </nav>
+
+    <section id="overview" class="panel">
+      <div class="callout">
+        <strong>What you are building</strong>
+        A decision tool for professional photographers who shoot outdoors in Israel. Someone is not asking “what is the weather in Tel Aviv?”. They are asking: I have a portrait session tomorrow in Tel Aviv at 17:00. Should I shoot then — and is there a better window?
+      </div>
+      <p>Weather Data → Analysis → Photography Score → Recommendation → Decision</p>
+
+      <h2>How this playbook works</h2>
+      <table>
+        <thead><tr><th>Tab</th><th>When to open it</th></tr></thead>
+        <tbody>
+          <tr><td>Start here</td><td>Now — product, words, order of work</td></tr>
+          <tr><td>Split</td><td>After you pick Role A vs Role B</td></tr>
+          <tr><td>12 steps</td><td>When you want one assignment step explained</td></tr>
+          <tr><td>Files</td><td>When you are unsure which file to type in</td></tr>
+          <tr><td>Page mockup</td><td>Before building Streamlit — the UX target</td></tr>
+          <tr><td>Inspiration</td><td>Layout and API docs only (do not copy a weather app)</td></tr>
+          <tr><td>Checklist</td><td>Every work session — tick the task you are on</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Words you will see</h2>
+      <table>
+        <thead><tr><th>Word</th><th>What it means here</th></tr></thead>
+        <tbody>
+          <tr><td>API</td><td>A way for Python to ask OpenWeatherMap for data</td></tr>
+          <tr><td>API key</td><td>A secret password. Never put it on GitHub.</td></tr>
+          <tr><td>Endpoint</td><td>The URL you call: /data/2.5/forecast (5-day / 3-hour)</td></tr>
+          <tr><td>JSON</td><td>The nested dictionary the API sends back</td></tr>
+          <tr><td>Streamlit</td><td>The library that turns app.py into a web page</td></tr>
+          <tr><td>HourlyConditions</td><td>Weather for one 3-hour slot (temp, wind, clouds, rain chance)</td></tr>
+          <tr><td>ForecastReport</td><td>City info + a list of hours + sunrise/sunset</td></tr>
+          <tr><td>Photography Score</td><td>Your 0–100 rating of how good that hour is for this shoot type</td></tr>
+          <tr><td>Best Shooting Window</td><td>The time range you recommend, based on the scores</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Work in this order</h2>
+      <p>Do one step until it works. Do not start Streamlit on day 1. First get status 200 from the forecast notebook. Do not write scoring.py until the sample JSON parses.</p>
+
+      <details open>
+        <summary>Step 1 — Get a free key and install libraries</summary>
+        <p>Your task: make your computer ready to talk to OpenWeatherMap.</p>
+        <p class="muted">How: create a key at home.openweathermap.org/api_keys. Copy .env.example to .env and paste the key. Then pip install -r requirements.txt inside weather-project/.</p>
+        <p class="small">Who: both · Done when: you have a .env file and pip finished without errors.</p>
+      </details>
+      <details>
+        <summary>Step 2 — Notebook: forecast status 200</summary>
+        <p>Your task: send one forecast request for a real city and see that it worked.</p>
+        <p class="muted">How: open notebooks/01_forecast_api_colab.ipynb. GET https://api.openweathermap.org/data/2.5/forecast with params q, appid, units=metric. Print status_code. Do not use /weather (that is only “now”).</p>
+        <p class="small">Who: both · Do not build the Streamlit page yet.</p>
+      </details>
+      <details>
+        <summary>Step 3 — Read photographer fields from JSON</summary>
+        <p>Your task: find temperature, wind, clouds, rain chance (pop), and sunset.</p>
+        <p class="muted">How: payload["list"][0] and payload["city"]. Practice offline on data/sample_forecast.json.</p>
+        <p class="small">Who: both · Done when: you can print city, one slot time, those fields, sunset.</p>
+      </details>
+      <details>
+        <summary>Step 4 — Role A: models.py (sample JSON)</summary>
+        <p>Your task: fill HourlyConditions.from_slot_json and ForecastReport.from_api_json.</p>
+        <p class="muted">How: open photo_planner/models.py next to data/sample_forecast.json. Then remove skip on matching tests.</p>
+        <p class="small">Who: Role A · Role B waits until field names are frozen.</p>
+      </details>
+      <details>
+        <summary>Step 5 — Role A: validation.py then client.py</summary>
+        <p>Your task: clean city and shoot type, then send the live forecast from Python files.</p>
+        <p class="muted">How: fill normalize_city_name and normalize_shoot_type, then get_forecast in client.py. Return a ForecastReport.</p>
+        <p class="small">Who: Role A · Done when: pytest for models/validation passes and Tel Aviv works.</p>
+      </details>
+      <details>
+        <summary>Step 6 — Together: score weights on paper</summary>
+        <p>Your task: agree what “good weather” means for each shoot type. There is no single correct formula.</p>
+        <p class="muted">How: for portrait, sunset, and landscape, four numbers (rain, wind, temperature, clouds) that add up to 1.0. Put them in SHOOT_WEIGHTS.</p>
+        <p class="small">Who: both · Do this before coding photography_score.</p>
+      </details>
+      <details>
+        <summary>Step 7 — Role A: scoring.py</summary>
+        <p>Your task: turn weather into a 0–100 score and a recommended window.</p>
+        <p class="muted">How: fill photography_score, hours_on_date, score_forecast, best_shooting_window. MVP window = the best 3-hour slot. Sample date 2026-09-04 keeps 4 hours.</p>
+        <p class="small">Who: Role A · This file is the product.</p>
+      </details>
+      <details>
+        <summary>Step 8 — Role B: charts, then the mockup page</summary>
+        <p>Your task: make the result screen match the Page mockup tab.</p>
+        <p class="muted">How: photography_score_chart first. In app.py: three st.metric, one st.success, score chart, then two charts in st.columns(2). Catch WeatherError with st.error. No CSS. No JSON parsing in app.py.</p>
+        <p class="small">Who: Role B</p>
+      </details>
+      <details>
+        <summary>Step 9 — Test on your computer</summary>
+        <p>Your task: use the app like a photographer, including mistakes.</p>
+        <p class="muted">How: streamlit run app.py. Tel Aviv portrait tomorrow 17:00, a sunset session, a missing key.</p>
+        <p class="small">Who: B leads, A checks whether scores make photographic sense.</p>
+      </details>
+      <details>
+        <summary>Step 10 — GitHub (no secrets)</summary>
+        <p>Your task: share the code without sharing the API key.</p>
+        <p class="muted">How: docs/DEPLOY.md. Inspect git status before every push.</p>
+      </details>
+      <details>
+        <summary>Step 11 — Deploy and screenshot</summary>
+        <p>Your task: Streamlit Community Cloud, then screenshot score + error.</p>
+        <p class="muted">How: share.streamlit.io → this repo → app.py → secret OPENWEATHER_API_KEY.</p>
+      </details>
+      <details>
+        <summary>Step 12 — OPTIONAL Phase 2</summary>
+        <p>Compare Tel Aviv, Haifa, and Herzliya for the same sunset. Skip until the one-city app is solid. Stub is commented in scoring.py.</p>
+      </details>
+
+      <h2>Three phases</h2>
+      <div class="grid-3">
+        <div class="card"><span class="pill">Both</span><h3>1. Forecast lab</h3><p>Notebook: GET forecast, read list slots and city sunset. No Streamlit yet.</p></div>
+        <div class="card"><span class="pill">A then both then B</span><h3>2. Python files</h3><p>A: models, client, scoring. Both: weights on paper. B: charts and the mockup page from scored hours.</p></div>
+        <div class="card"><span class="pill">Both</span><h3>3. Live app</h3><p>Test locally, GitHub without secrets, Streamlit Cloud. Screenshot the Photography Score.</p></div>
+      </div>
+
+      <h2>Suggested sessions</h2>
+      <table>
+        <thead><tr><th>When</th><th>What you do together</th></tr></thead>
+        <tbody>
+          <tr><td>Session 1</td><td>Both on the forecast notebook until status 200</td></tr>
+          <tr><td>Session 2</td><td>A fills models + client; both agree score weights</td></tr>
+          <tr><td>Session 3</td><td>A finishes scoring.py; B builds the mockup in app.py</td></tr>
+          <tr><td>Session 4</td><td>Read each other’s code, then GitHub + Cloud + screenshots</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <strong>Do not copy a finished weather app</strong>
+        This is not a weather checker anymore. Fill the TODO comments in photo_planner/. Inspiration is for layout ideas only.
+      </div>
+    </section>
+
+    <section id="split" class="panel" hidden>
+      <h2>Who does which job</h2>
+      <p>Each person owns some files so you do not type in the same function at the same time. Decide weights together — that is the product idea.</p>
+      <div class="bar"><span class="a"></span><span class="b"></span><span class="s"></span></div>
+      <p class="small">A data+score 45 · B page 35 · both 20 — rough split, not a timer.</p>
+      <div class="grid-2">
+        <div class="card">
+          <span class="pill a">Role A</span>
+          <h3>Data and Photography Score</h3>
+          <p>Files: client.py, models.py, validation.py, errors.py, scoring.py, tests/. You turn forecast JSON into a ForecastReport, then into (hour, score) pairs.</p>
+          <p class="small">You are done when pytest passes and best_shooting_window returns a start, end, and score.</p>
+        </div>
+        <div class="card">
+          <span class="pill b">Role B</span>
+          <h3>Page — show the decision</h3>
+          <p>Files: charts.py, app.py, .streamlit/config.toml, README usage. You do not parse JSON. You display the mockup: score, window, sentence, three charts.</p>
+          <p class="small">You are done when Plan shoot matches the Page mockup tab and errors use st.error.</p>
+        </div>
+      </div>
+      <h3>Do these together — do not split them</h3>
+      <table>
+        <thead><tr><th>Task</th><th>Why both of you</th></tr></thead>
+        <tbody>
+          <tr><td>First forecast request in the notebook</td><td>You both need to see real list slots once</td></tr>
+          <tr><td>HourlyConditions field names</td><td>B can only build charts after A freezes the names</td></tr>
+          <tr><td>Photography Score weights</td><td>The product idea belongs to both of you</td></tr>
+          <tr><td>GitHub + secrets</td><td>One committed key can fail the assignment</td></tr>
+          <tr><td>Cloud deploy</td><td>You both must open and debug the live URL</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="steps" class="panel" hidden>
+      <h2>The 12 steps, written as tasks</h2>
+      <p>Same order as Start here. Tick matching rows on Checklist. University stages (API, JSON, functions, Streamlit, GitHub, deploy) are all here — the extra steps are forecast + scoring, because that is the product.</p>
+      <details open><summary>1 — Connect to the forecast API</summary><p>Who: both · File: notebooks/01_forecast_api_colab.ipynb</p><p>GET /data/2.5/forecast with q, appid, units=metric. Print status_code. Done when a known city returns 200.</p></details>
+      <details><summary>2 — Request forecast for a city</summary><p>Who: Role A · File: photo_planner/client.py</p><p>Wrap the notebook request in get_forecast(city). Return a ForecastReport. Done when get_forecast("Tel Aviv") works.</p></details>
+      <details><summary>3 — Process JSON</summary><p>Who: Role A · File: photo_planner/models.py</p><p>from_slot_json and from_api_json. Practice on data/sample_forecast.json. pop is 0–1, not percent. rain["3h"] is often missing.</p></details>
+      <details><summary>4 — Photography Score (the product)</summary><p>Who: Role A after both agree weights · File: photo_planner/scoring.py</p><p>photography_score, hours_on_date, score_forecast, best_shooting_window. MVP = best 3-hour slot.</p></details>
+      <details><summary>5 — Visualizations</summary><p>Who: Role B · File: photo_planner/charts.py</p><p>photography_score_chart first (the product chart), then temperature, then clouds/rain. Simple Plotly lines. No API calls here.</p></details>
+      <details><summary>6 — Functions, classes, modules</summary><p>Who: A + B · Folder: photo_planner/</p><p>Stop treating the notebook as the app. app.py only calls client, scoring, and charts.</p></details>
+      <details><summary>7 — Streamlit interface</summary><p>Who: Role B · File: app.py</p><p>Follow the Page mockup. Inputs are already there. After Plan shoot: three metrics, st.success, charts. Catch WeatherError.</p></details>
+      <details><summary>8 — Test locally</summary><p>Who: B leads · streamlit run app.py</p><p>Real shoot plan plus error cases. Scores should make sense for a photographer, not only “the code ran”.</p></details>
+      <details><summary>9 — GitHub</summary><p>Who: both · docs/DEPLOY.md</p><p>New repo for this project. .gitignore must list .env and secrets.toml.</p></details>
+      <details><summary>10 — Deploy</summary><p>Who: both · share.streamlit.io</p><p>Entry file app.py. Secret OPENWEATHER_API_KEY. Screenshot the score screen.</p></details>
+      <details><summary>11 — Validation extras already in the package</summary><p>City cleaning and shoot-type cleaning live in validation.py. Role A implements them before the live API call.</p></details>
+      <details><summary>12 — OPTIONAL Phase 2</summary><p>Compare cities for sunset. Only after the one-city mockup works.</p></details>
+    </section>
+
+    <section id="files" class="panel" hidden>
+      <h2>Which file do I type in?</h2>
+      <p>Starter files are already there. You fill the TODO sections. The old weather_checker package is gone. Use photo_planner/.</p>
+      <table>
+        <thead><tr><th>If your task is…</th><th>Open this file</th><th>Who</th></tr></thead>
+        <tbody>
+          <tr><td>Practice the first forecast request</td><td>notebooks/01_forecast_api_colab.ipynb</td><td>Both</td></tr>
+          <tr><td>Send the live HTTP request</td><td>photo_planner/client.py</td><td>A</td></tr>
+          <tr><td>Turn JSON into hours</td><td>photo_planner/models.py</td><td>A</td></tr>
+          <tr><td>Check city and shoot type</td><td>photo_planner/validation.py</td><td>A</td></tr>
+          <tr><td>Named errors (already written)</td><td>photo_planner/errors.py</td><td>A uses them</td></tr>
+          <tr><td>Photography Score + best window</td><td>photo_planner/scoring.py</td><td>A (weights: both)</td></tr>
+          <tr><td>Draw Plotly charts</td><td>photo_planner/charts.py</td><td>B</td></tr>
+          <tr><td>Build the web page</td><td>app.py</td><td>B</td></tr>
+          <tr><td>Practice JSON without internet</td><td>data/sample_forecast.json</td><td>A</td></tr>
+          <tr><td>Run automated checks</td><td>tests/</td><td>A</td></tr>
+          <tr><td>See the UX target</td><td>docs/PAIR.md (and this Mockup tab)</td><td>B</td></tr>
+          <tr><td>Publish the app</td><td>docs/DEPLOY.md</td><td>Both</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <strong>Agreement between A and B</strong>
+        app.py never reads raw JSON. It calls get_forecast(), then score_forecast(), and displays the result. If B needs a new field, A adds it on HourlyConditions first.
+      </div>
+    </section>
+
+    <section id="mockup" class="panel" hidden>
+      <h2>Page mockup — what to build</h2>
+      <p>Professional, junior-friendly: one Streamlit page, widgets only, no custom CSS, no extra screens. The theme is already in .streamlit/config.toml. Numbers below are an example from data/sample_forecast.json so you can see the layout. Your live scores will be different.</p>
+      <div class="callout">
+        <strong>Design rules</strong>
+        Decision first, weather second. One screen: inputs on top, result below. Three charts is enough. Do not dump JSON. Empty and error states are part of the product.
+      </div>
+      <h3>Skip for the MVP</h3>
+      <table>
+        <thead><tr><th>Too hard</th><th>Why skip</th></tr></thead>
+        <tbody>
+          <tr><td>Custom CSS / HTML / React</td><td>Streamlit widgets already look clean</td></tr>
+          <tr><td>Map of Israel</td><td>Not needed to recommend a time</td></tr>
+          <tr><td>Login or saved shoots</td><td>Out of scope</td></tr>
+          <tr><td>Compare three cities on one screen</td><td>Phase 2</td></tr>
+          <tr><td>Windows like 17:50–19:05</td><td>Free API is every 3 hours</td></tr>
+        </tbody>
+      </table>
+      <h3>1 — Before Plan shoot</h3>
+      <p class="muted">Already started in app.py: title, four inputs, button.</p>
+      <table>
+        <thead><tr><th>Block</th><th>Streamlit widget</th></tr></thead>
+        <tbody>
+          <tr><td>Title</td><td>st.title + st.caption</td></tr>
+          <tr><td>Location / date / time / type</td><td>st.columns(4) + selectbox, date_input, time_input</td></tr>
+          <tr><td>Button</td><td>st.button("Plan shoot", type="primary")</td></tr>
+          <tr><td>Empty text</td><td>st.write + short markdown about the product</td></tr>
+        </tbody>
+      </table>
+      <h3>2 — After a successful plan (the page that matters)</h3>
+      <p>Example session: Tel Aviv · 4 Sep 2026 · portrait · preferred 17:00</p>
+      <div class="grid-3">
+        <div class="metric"><b>87 / 100</b><span>Photography Score</span></div>
+        <div class="metric"><b>18:00–21:00</b><span>Best shooting window</span></div>
+        <div class="metric"><b>17:00 · 83</b><span>Your booked time</span></div>
+      </div>
+      <div class="callout ok">
+        <strong>Recommendation sentence (st.success)</strong>
+        Conditions look excellent for a portrait session. Rain chance is low and the wind eases after 18:00. If you can move the booking, prefer 18:00–21:00 over 17:00.
+      </div>
+      <h3>Photography Score during the day</h3>
+      <svg class="chart" viewBox="0 0 420 180" aria-label="Photography Score vs clock time">
+        <polyline fill="none" stroke="#1f7a6c" stroke-width="3" points="40,86 140,64 240,28 340,90" />
+        <circle cx="40" cy="86" r="4" fill="#1f7a6c" /><circle cx="140" cy="64" r="4" fill="#1f7a6c" />
+        <circle cx="240" cy="28" r="4" fill="#1f7a6c" /><circle cx="340" cy="90" r="4" fill="#1f7a6c" />
+        <text x="40" y="170" font-size="11" fill="#5c656c">12:00</text>
+        <text x="140" y="170" font-size="11" fill="#5c656c">15:00</text>
+        <text x="240" y="170" font-size="11" fill="#5c656c">18:00</text>
+        <text x="340" y="170" font-size="11" fill="#5c656c">21:00</text>
+        <text x="248" y="22" font-size="11" fill="#1f7a6c">94 best</text>
+      </svg>
+      <p class="small">Score (0–100) vs clock time · Illustrative mockup using data/sample_forecast.json (Tel Aviv, 2026-09-04) — not a live API result. Person B recreates this with Plotly in photography_score_chart.</p>
+      <h3>Temperature and clouds / rain</h3>
+      <div class="grid-2">
+        <div>
+          <p><strong>Temperature (°C)</strong></p>
+          <svg class="chart" viewBox="0 0 420 180" aria-label="Temperature vs clock time">
+            <polyline fill="none" stroke="#c47b2b" stroke-width="3" points="40,40 140,58 240,96 340,122" />
+            <text x="40" y="170" font-size="11" fill="#5c656c">12:00</text>
+            <text x="140" y="170" font-size="11" fill="#5c656c">15:00</text>
+            <text x="240" y="170" font-size="11" fill="#5c656c">18:00</text>
+            <text x="340" y="170" font-size="11" fill="#5c656c">21:00</text>
+          </svg>
+          <p class="small">Temperature (°C) vs clock time · same sample forecast slots</p>
+        </div>
+        <div>
+          <p><strong>Cloud cover and rain chance (%)</strong></p>
+          <svg class="chart" viewBox="0 0 420 180" aria-label="Clouds and rain vs clock time">
+            <polyline fill="none" stroke="#5c656c" stroke-width="3" points="40,140 140,96 240,128 340,32" />
+            <polyline fill="none" stroke="#1b4f63" stroke-width="3" stroke-dasharray="6 4" points="40,154 140,142 240,160 340,62" />
+            <text x="40" y="170" font-size="11" fill="#5c656c">12:00</text>
+            <text x="140" y="170" font-size="11" fill="#5c656c">15:00</text>
+            <text x="240" y="170" font-size="11" fill="#5c656c">18:00</text>
+            <text x="340" y="170" font-size="11" fill="#5c656c">21:00</text>
+          </svg>
+          <p class="small">Percent vs clock time · rain chance is pop × 100 from the sample JSON</p>
+        </div>
+      </div>
+      <h3>Build order in app.py</h3>
+      <table>
+        <thead><tr><th>Order</th><th>Widget</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>st.caption</td><td>City · date · type under the button</td></tr>
+          <tr><td>2</td><td>st.columns(3) + st.metric</td><td>Score, window, booked time</td></tr>
+          <tr><td>3</td><td>st.success</td><td>One or two sentences, not a paragraph</td></tr>
+          <tr><td>4</td><td>st.plotly_chart</td><td>Full-width score chart first</td></tr>
+          <tr><td>5</td><td>st.columns(2) + two charts</td><td>Temperature left, clouds/rain right</td></tr>
+          <tr><td>6</td><td>st.expander (optional)</td><td>Why this hour? wind / rain / clouds</td></tr>
+        </tbody>
+      </table>
+      <h3>3 — If something goes wrong</h3>
+      <div class="callout danger">
+        <strong>st.error — one sentence, no traceback</strong>
+        City not found. Check the location name and try again.
+      </div>
+      <p class="muted">Same pattern for a missing API key. except WeatherError as err: then st.error(str(err)).</p>
+    </section>
+
+    <section id="inspo" class="panel" hidden>
+      <h2>Where to look — without copying code</h2>
+      <p>Use these to decide what to put large on the page. Recreate the ideas in Streamlit with your Photography Score. Do not paste a finished weather app.</p>
+      <h3>Product and layout</h3>
+      <table>
+        <thead><tr><th>Reference</th><th>Steal this idea</th><th>Link</th></tr></thead>
+        <tbody>
+          <tr><td>Golden hour / outdoor shoot planning</td><td>Lead with a recommendation and a time window, not a temperature dump</td><td><a href="https://www.timeanddate.com/sun/israel/tel-aviv">sunset times Tel Aviv</a></td></tr>
+          <tr><td>AccuWeather hourly</td><td>A row of hours the user can scan — maps to your 3-hour score line</td><td><a href="https://www.accuweather.com/">accuweather.com</a></td></tr>
+          <tr><td>Streamlit metric docs</td><td>Three big numbers: score, window, booked time</td><td><a href="https://docs.streamlit.io/develop/api-reference/data/st.metric">st.metric</a></td></tr>
+        </tbody>
+      </table>
+      <h3>API and charts</h3>
+      <table>
+        <thead><tr><th>Reference</th><th>What it is for</th><th>Link</th></tr></thead>
+        <tbody>
+          <tr><td>5 day / 3 hour forecast</td><td>The free endpoint for this project (not current weather)</td><td><a href="https://openweathermap.org/forecast5">openweathermap.org/forecast5</a></td></tr>
+          <tr><td>Plotly + Streamlit</td><td>Show your charts on the page</td><td><a href="https://docs.streamlit.io/develop/api-reference/charts/st.plotly_chart">st.plotly_chart</a></td></tr>
+        </tbody>
+      </table>
+      <h3>Streamlit and deploy</h3>
+      <table>
+        <thead><tr><th>Reference</th><th>What it is for</th><th>Link</th></tr></thead>
+        <tbody>
+          <tr><td>Streamlit docs</td><td>st.selectbox, st.date_input, st.success, st.error</td><td><a href="https://docs.streamlit.io/">docs.streamlit.io</a></td></tr>
+          <tr><td>Secrets</td><td>How the key lives on Cloud without entering git</td><td><a href="https://docs.streamlit.io/develop/concepts/connections/secrets-management">secrets</a></td></tr>
+          <tr><td>Community Cloud</td><td>Deploy the GitHub repo</td><td><a href="https://share.streamlit.io/">share.streamlit.io</a></td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn">
+        <strong>Use the forecast endpoint</strong>
+        Current weather (/data/2.5/weather) cannot recommend a shooting window. This project uses the 5-day / 3-hour forecast until the app is live.
+      </div>
+    </section>
+
+    <section id="check" class="panel" hidden>
+      <h2>Your tasks</h2>
+      <div class="callout">
+        <strong>How to use this list</strong>
+        Each row is one job: what to do, how to do it, and when it is done. Work from the top of Both, then Role A or Role B. Click a row to mark it in progress, then done. Ticks stay on this computer (browser storage).
+      </div>
+      <h3>Both — start here</h3>
+      <div id="todos-s"></div>
+      <h3>Role A — data + score</h3>
+      <div id="todos-a"></div>
+      <h3>Role B — the web page</h3>
+      <div id="todos-b"></div>
+      <div class="callout ok">
+        <strong>You are finished when</strong>
+        The public URL opens, a photographer can plan a shoot and see a Photography Score plus a best window and charts, a failure shows a clear error, and GitHub does not contain the API key.
+      </div>
+    </section>
+
+    <footer class="note">
+      Code folder: weather-project/ · Package: photo_planner/ · Same text version: docs/PAIR.md · Never commit .env or .streamlit/secrets.toml<br />
+      This HTML is a browser copy of the Cursor canvas. Open the file, or send it on WhatsApp / Drive. It works offline.
+    </footer>
+  </div>
+
+  <script>
+    const TODOS = {
+      s: [
+        "Task: Decide who is Role A (data + score) and who is Role B (the web page). How: talk for 10 minutes, then write the names in docs/PAIR.md. Done when: each person knows which files they own.",
+        "Task: Practice the FORECAST API together, before Streamlit. How: open notebooks/01_forecast_api_colab.ipynb, add the API key (do not commit it), request Tel Aviv on /data/2.5/forecast, print status_code. Done when: you see 200.",
+        "Task: Agree Photography Score weights on paper. How: for portrait, sunset, and landscape, write rain / wind / temperature / clouds weights that add to 1.0. Ask: what would cancel this shoot first? Put the numbers in scoring.py SHOOT_WEIGHTS. Done when: both can explain portrait vs sunset.",
+        "Task: Read each other’s files out loud. How: Role A opens app.py and charts.py. Role B opens client.py and scoring.py. Ask: can I say what this file does in my own words? Done when: both of you can.",
+        "Task: Put the project on GitHub without the secret key. How: follow docs/DEPLOY.md. Before you push, git status must not show .env. Done when: GitHub has the code and no API key.",
+        "Task: Publish the app. How: Streamlit Community Cloud, entry file app.py, secret name OPENWEATHER_API_KEY. Done when: you have a public URL.",
+        "Task: Prove the live app works. How: plan a real Israel shoot (Tel Aviv, tomorrow, 17:00, portrait), then trigger an error. Save screenshots of the score and of the error. Done when: both screenshots exist."
+      ],
+      a: [
+        "Task: Get a free OpenWeatherMap key and keep it only on your computer. How: create a key, copy weather-project/.env.example to .env, paste the key. Never commit .env. Done when: .env exists locally and is ignored by git.",
+        "Task: Look at the raw forecast JSON. How: after status 200, print payload[\"city\"][\"name\"], len(payload[\"list\"]), and one slot’s temp, pop, clouds.all. Done when: you can point to photographer fields in the JSON.",
+        "Task: Turn the sample forecast into models (no internet). How: fill HourlyConditions.from_slot_json and ForecastReport.from_api_json in photo_planner/models.py using data/sample_forecast.json. Done when: city, sunset, and five hourly slots parse.",
+        "Task: Stop empty city names and unknown shoot types. How: fill normalize_city_name and normalize_shoot_type in photo_planner/validation.py. Done when: tests/test_validation.py can run after you remove the skip lines.",
+        "Task: Write the live forecast request. How: fill get_forecast in photo_planner/client.py. Clean the city name, requests.get to FORECAST_URL, return ForecastReport.from_api_json(...). Done when: get_forecast(\"Tel Aviv\") returns a report.",
+        "Task: Turn failed requests into clear errors. How: 401 → InvalidApiKeyError, 404 → CityNotFoundError, other failures → WeatherRequestError. Done when: a fake city raises CityNotFoundError instead of crashing.",
+        "Task: Keep only hours on the booked date. How: fill hours_on_date in scoring.py. Sample date 2026-09-04 should keep 4 slots and drop 2026-09-05. Done when: that filter matches tests/test_scoring.py.",
+        "Task: Write photography_score (0–100). How: convert rain, wind, temperature, clouds into goodness scores, then combine with SHOOT_WEIGHTS. There is no single correct formula — use the weights you agreed with Dafna. Done when: the function returns a number between 0 and 100.",
+        "Task: Write score_forecast and best_shooting_window. How: follow the TODOs in scoring.py. MVP window = the single best 3-hour slot. Done when: scoring tests pass after you remove skip.",
+        "Task: Turn tests on and make them pass. How: delete @pytest.mark.skip in tests/ after each function works. From weather-project/ run pytest. Done when: pytest reports passed, not skipped."
+      ],
+      b: [
+        "Task: In the notebook, pull out the numbers the page will show. How: time, temperature, wind, clouds, rain chance (pop), sunset — notebook section 3. Done when: you can print those values for Tel Aviv.",
+        "Task: Make the Photography Score chart. How: fill photography_score_chart in photo_planner/charts.py. X = clock time, Y = score 0–100. Return a Plotly figure. Do not call the API in this file. Done when: the function returns a figure.",
+        "Task: Show the decision after Plan shoot. How: match Page mockup section 2 — three st.metric (score, best window, booked time), then one st.success sentence. Catch WeatherError with st.error. Done when: a real city shows a score, not a weather dump.",
+        "Task: Put the score chart on the page. How: full-width st.plotly_chart(photography_score_chart(scored)). Mark the best hour if you can. Done when: searching Tel Aviv shows numbers and the score line.",
+        "Task: Add temperature and clouds/rain charts. How: st.columns(2) plus temperature_chart and clouds_and_rain_chart. Done when: the result screen matches the mockup’s three-chart layout.",
+        "Task: Try the app on your computer. How: streamlit run app.py. Portrait in Tel Aviv at 17:00, sunset in Haifa, missing key if you temporarily rename .env. Done when: good plans show a score and mistakes show a friendly error, not a traceback.",
+        "Task: Write how a classmate can run the project. How: update README.md (install, .env, streamlit run app.py, never commit the key). Done when: someone new could follow README without asking you.",
+        "Optional: Highlight the photographer’s preferred time on the score chart. Skip until the main chart works."
+      ]
+    };
+
+    const KEY = "shoot-window-playbook-todos-v1";
+    const nextStatus = { pending: "in_progress", in_progress: "completed", completed: "pending" };
+
+    function loadState() {
+      try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+      catch { return {}; }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    }
+
+    function renderList(group, elId, state) {
+      const root = document.getElementById(elId);
+      root.innerHTML = "";
+      TODOS[group].forEach((text, i) => {
+        const id = group + i;
+        const status = state[id] || "pending";
+        const row = document.createElement("div");
+        row.className = "todo " + status;
+        row.innerHTML = '<div class="mark"></div><p></p>';
+        row.querySelector("p").textContent = text;
+        row.addEventListener("click", () => {
+          state[id] = nextStatus[status];
+          saveState(state);
+          renderAll(state);
+        });
+        root.appendChild(row);
+      });
+    }
+
+    function renderAll(state) {
+      renderList("s", "todos-s", state);
+      renderList("a", "todos-a", state);
+      renderList("b", "todos-b", state);
+      const total = TODOS.s.length + TODOS.a.length + TODOS.b.length;
+      const done = Object.values(state).filter((s) => s === "completed").length;
+      document.getElementById("done-stat").textContent = done + "/" + total;
+    }
+
+    renderAll(loadState());
+
+    document.querySelectorAll("nav.tabs button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll("nav.tabs button").forEach((b) => {
+          b.setAttribute("aria-selected", b === btn ? "true" : "false");
+        });
+        document.querySelectorAll("section.panel").forEach((panel) => {
+          panel.hidden = panel.id !== tab;
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# Theme for the Streamlit page (colors and layout).
+# This is not Python. Streamlit reads it automatically from this folder.
+# Person B may tweak colors later. You do not need this file to learn the API.
+# Warm gold is a nod to outdoor / golden-hour photography — change it if you want.
+
+[theme]
+base = "light"
+primaryColor = "#c47b2b"
+backgroundColor = "#fffaf3"
+secondaryBackgroundColor = "#f4ece1"
+textColor = "#1b1f24"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

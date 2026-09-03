@@ -1,0 +1,27 @@
+# ============================================================
+# WHAT THIS FILE DOES
+# ============================================================
+# This is not Python code. It lists the Python libraries
+# (dependencies) another computer must install to run the project.
+#
+# Install them with:
+#     pip install -r requirements.txt
+# ============================================================
+
+# KEEP — talks to the OpenWeatherMap forecast API over HTTP
+requests>=2.32.0
+
+# KEEP — loads OPENWEATHER_API_KEY from the .env file on your computer
+python-dotenv>=1.0.0
+
+# KEEP — turns app.py into a web page
+streamlit>=1.39.0
+
+# KEEP — interactive charts (Person B uses this in charts.py)
+plotly>=5.24.0
+
+# OPTIONAL — handy if you build a small table of hourly scores before plotting
+pandas>=2.2.0
+
+# KEEP — run tests with: pytest
+pytest>=8.3.0
