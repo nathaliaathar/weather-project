@@ -29,27 +29,11 @@ from __future__ import annotations
 
 import os
 from typing import Any
+import requests
 
-# WHY THIS EXISTS:
-# requests is the library that sends HTTP GET requests to the API.
-# You will use it inside get_forecast. Import it when you write that code.
-# import requests  # uncomment when you implement get_forecast
-
-# WHY THIS EXISTS:
-# These error classes live in errors.py so the UI can catch them by name.
 from photo_planner.errors import InvalidApiKeyError, WeatherRequestError  # KEEP
-
-# HINT: you will also need CityNotFoundError when status is 404.
-# from photo_planner.errors import CityNotFoundError
-
-# WHY THIS EXISTS:
-# normalize_city_name is written in validation.py.
-# Call it before you send the request so empty/invalid names never hit the API.
-# from photo_planner.validation import normalize_city_name
-
-# WHY THIS EXISTS:
-# ForecastReport.from_api_json turns the JSON dict into the object
-# scoring.py and app.py use.
+from photo_planner.errors import CityNotFoundError
+from photo_planner.validation import normalize_city_name
 from photo_planner.models import ForecastReport  # KEEP
 
 # KEEP — this is the official 5-day / 3-hour forecast endpoint (the URL you call).
@@ -115,7 +99,30 @@ class OpenWeatherClient:
         # The forecast payload has payload["list"] (many hours)
         # and payload["city"] (name, sunrise, sunset).
 
-        raise NotImplementedError("Person A: implement the forecast request")  # DELETE LATER
+        clean_city = normalize_city_name(city)
+
+        params = self._params(clean_city, units)
+
+        response = requests.get(
+            FORECAST_URL,
+            params=params,
+            timeout=self.timeout_seconds
+        )
+
+        if response.status_code == 401:
+            raise InvalidApiKeyError("Invalid OpenWeather API key.")
+
+        if response.status_code == 404:
+            raise CityNotFoundError(f"City not found: {clean_city}")
+
+        if response.status_code != 200:
+            raise WeatherRequestError(
+                f"Weather request failed with status code {response.status_code}"
+            )
+
+        payload = response.json()
+
+        return ForecastReport.from_api_json(payload)
 
     def _params(self, city: str, units: str) -> dict[str, Any]:
         """
@@ -134,4 +141,8 @@ class OpenWeatherClient:
 
         # TODO (STUDENT): Return a dict with keys q, appid, and units.
 
-        raise NotImplementedError("Person A: return q, appid, units")  # DELETE LATER
+        return {
+            "q": city,
+            "appid": self.api_key,
+            "units": units
+        }

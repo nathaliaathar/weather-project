@@ -33,7 +33,7 @@ def _sample() -> dict:
 
 
 # TODO (STUDENT): After from_slot_json works, delete the skip marker on this test.
-@pytest.mark.skip(reason="Remove this skip after implementing from_slot_json")
+#@pytest.mark.skip(reason="Remove this skip after implementing from_slot_json")
 def test_first_slot_metrics() -> None:
     slot = _sample()["list"][0]
     hour = HourlyConditions.from_slot_json(slot)
@@ -47,7 +47,7 @@ def test_first_slot_metrics() -> None:
 
 
 # TODO (STUDENT): After from_slot_json handles missing/present rain, delete this skip.
-@pytest.mark.skip(reason="Remove this skip after implementing from_slot_json")
+#@pytest.mark.skip(reason="Remove this skip after implementing from_slot_json")
 def test_rain_slot_reads_3h_mm() -> None:
     slot = _sample()["list"][3]
     hour = HourlyConditions.from_slot_json(slot)
@@ -58,7 +58,7 @@ def test_rain_slot_reads_3h_mm() -> None:
 
 
 # TODO (STUDENT): After from_api_json works, delete the skip marker on this test.
-@pytest.mark.skip(reason="Remove this skip after implementing from_api_json")
+#@pytest.mark.skip(reason="Remove this skip after implementing from_api_json")
 def test_forecast_city_and_sunset() -> None:
     report = ForecastReport.from_api_json(_sample())
     assert report.city == "Tel Aviv"

@@ -23,6 +23,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 # WHY THIS EXISTS:
 # HourlyConditions and ForecastReport are written in models.py.
 # You read fields like hour.wind_speed — you do not parse JSON here.
@@ -31,9 +33,7 @@ from photo_planner.models import ForecastReport, HourlyConditions  # KEEP
 # WHY THIS EXISTS:
 # SHOOT_TYPES and normalize_shoot_type live in validation.py
 # so "Portrait" and "portrait" use the same list of types.
-# Uncomment when you call normalize_shoot_type inside photography_score.
-# from photo_planner.validation import SHOOT_TYPES, normalize_shoot_type
-
+from photo_planner.validation import SHOOT_TYPES, normalize_shoot_type
 
 # ------------------------------------------------------------
 # STUDENT TASK 1: Decide weights with Dafna (on paper first)
@@ -52,25 +52,25 @@ from photo_planner.models import ForecastReport, HourlyConditions  # KEEP
 #
 # TODO (STUDENT): Replace None with weights you both agree on.
 # DELETE LATER: the None placeholders, once real numbers are in.
-
+#ההיגיון: בפורטרט גשם ורוח מפריעים מאוד; בשקיעה העננות הכי משמעותית; בנוף עננות וגשם משפיעים יותר מרוח.
 SHOOT_WEIGHTS = {
     "portrait": {
-        "rain": None,
-        "wind": None,
-        "temperature": None,
-        "clouds": None,
+        "rain": 0.35,
+        "wind": 0.30,
+        "temperature": 0.20,
+        "clouds": 0.15,
     },
     "sunset": {
-        "rain": None,
-        "wind": None,
-        "temperature": None,
-        "clouds": None,
+        "rain": 0.25,
+        "wind": 0.10,
+        "temperature": 0.10,
+        "clouds": 0.55,
     },
     "landscape": {
-        "rain": None,
-        "wind": None,
-        "temperature": None,
-        "clouds": None,
+        "rain": 0.30,
+        "wind": 0.15,
+        "temperature": 0.15,
+        "clouds": 0.40,
     },
 }
 
@@ -119,7 +119,43 @@ def photography_score(
     #
     # OPTIONAL: use sunset_unix for sunset shoots (hours away from sunset).
 
-    raise NotImplementedError("Person A: implement photography_score")  # DELETE LATER
+    shoot_type = normalize_shoot_type(shoot_type)
+
+    weights = SHOOT_WEIGHTS[shoot_type]
+
+    # Less chance of rain is better
+    rain_goodness = 100 * (1 - hour.rain_probability)
+
+    # Strong wind lowers the score
+    wind_goodness = max(0, 100 - hour.wind_speed * 15)
+
+    # Around 22°C is considered comfortable for an outdoor shoot
+    temperature_goodness = max(
+        0,
+        100 - abs(hour.temperature_c - 22) * 5
+    )
+
+    # Different shoot types prefer different cloud coverage
+    if shoot_type == "portrait":
+        ideal_clouds = 40
+    elif shoot_type == "sunset":
+        ideal_clouds = 50
+    else:
+        ideal_clouds = 35
+
+    cloud_goodness = max(
+        0,
+        100 - abs(hour.cloud_cover - ideal_clouds) * 1.5
+    )
+
+    score = (
+            rain_goodness * weights["rain"]
+            + wind_goodness * weights["wind"]
+            + temperature_goodness * weights["temperature"]
+            + cloud_goodness * weights["clouds"]
+    )
+
+    return float(max(0, min(100, score)))
 
 
 def hours_on_date(forecast: ForecastReport, shoot_date: str) -> list[HourlyConditions]:
@@ -144,8 +180,11 @@ def hours_on_date(forecast: ForecastReport, shoot_date: str) -> list[HourlyCondi
     # YOUR CODE GOES HERE 👇
     # TODO (STUDENT): Filter forecast.hours to the chosen date and return the list.
 
-    raise NotImplementedError("Person A: keep only hours on shoot_date")  # DELETE LATER
-
+    return [
+        hour
+        for hour in forecast.hours
+        if hour.time_text.startswith(shoot_date)
+    ]
 
 def score_forecast(
     forecast: ForecastReport,
@@ -172,8 +211,20 @@ def score_forecast(
     # YOUR CODE GOES HERE 👇
     # TODO (STUDENT): Filter by date, score each hour, return (hour, score) pairs.
 
-    raise NotImplementedError("Person A: score every hour on the shoot date")  # DELETE LATER
+    day_hours = hours_on_date(forecast, shoot_date)
 
+    scored_hours = []
+
+    for hour in day_hours:
+        score = photography_score(
+            hour,
+            shoot_type,
+            forecast.sunset_unix
+        )
+
+        scored_hours.append((hour, score))
+
+    return scored_hours
 
 def best_shooting_window(
     scored_hours: list[tuple[HourlyConditions, float]],
@@ -208,8 +259,25 @@ def best_shooting_window(
     # YOUR CODE GOES HERE 👇
     # TODO (STUDENT): Find the highest score and return a start/end window.
 
-    raise NotImplementedError("Person A: recommend the best shooting window")  # DELETE LATER
+    if not scored_hours:
+        return None
 
+    best_hour, best_score = max(
+        scored_hours,
+        key=lambda pair: pair[1]
+    )
+
+    start_datetime = datetime.strptime(
+        best_hour.time_text,
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    end_datetime = start_datetime + timedelta(hours=3)
+
+    start_time = start_datetime.strftime("%H:%M")
+    end_time = end_datetime.strftime("%H:%M")
+
+    return start_time, end_time, round(best_score, 1)
 
 # ------------------------------------------------------------
 # OPTIONAL — Phase 2 (do this AFTER the single-city app works)

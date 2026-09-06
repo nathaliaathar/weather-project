@@ -35,7 +35,7 @@ def _forecast() -> ForecastReport:
 
 
 # TODO (STUDENT): After hours_on_date works, delete this skip.
-@pytest.mark.skip(reason="Remove this skip after implementing hours_on_date")
+#@pytest.mark.skip(reason="Remove this skip after implementing hours_on_date")
 def test_hours_on_date_drops_other_days() -> None:
     day = hours_on_date(_forecast(), "2026-09-04")
     assert len(day) == 4
@@ -43,7 +43,7 @@ def test_hours_on_date_drops_other_days() -> None:
 
 
 # TODO (STUDENT): After photography_score works, delete this skip.
-@pytest.mark.skip(reason="Remove this skip after implementing photography_score")
+#@pytest.mark.skip(reason="Remove this skip after implementing photography_score")
 def test_score_is_between_0_and_100() -> None:
     hour = _forecast().hours[0]
     score = photography_score(hour, "portrait", sunset_unix=_forecast().sunset_unix)
@@ -51,7 +51,7 @@ def test_score_is_between_0_and_100() -> None:
 
 
 # TODO (STUDENT): After score_forecast works, delete this skip.
-@pytest.mark.skip(reason="Remove this skip after implementing score_forecast")
+#@pytest.mark.skip(reason="Remove this skip after implementing score_forecast")
 def test_score_forecast_returns_pairs_for_that_day() -> None:
     scored = score_forecast(_forecast(), "portrait", "2026-09-04")
     assert len(scored) == 4
@@ -61,7 +61,7 @@ def test_score_forecast_returns_pairs_for_that_day() -> None:
 
 
 # TODO (STUDENT): After best_shooting_window works, delete this skip.
-@pytest.mark.skip(reason="Remove this skip after implementing best_shooting_window")
+#@pytest.mark.skip(reason="Remove this skip after implementing best_shooting_window")
 def test_best_window_has_start_end_and_score() -> None:
     scored = score_forecast(_forecast(), "portrait", "2026-09-04")
     window = best_shooting_window(scored)

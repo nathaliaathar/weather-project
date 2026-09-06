@@ -51,7 +51,19 @@ def normalize_city_name(city: str) -> str:
     # YOUR CODE GOES HERE 👇
     # TODO (STUDENT): Clean `city` and return it, or raise InvalidCityError.
 
-    raise NotImplementedError("Person A: implement city validation")  # DELETE LATER
+    if not isinstance(city, str):
+        raise InvalidCityError("City must be a string.")
+
+    cleaned_city = city.strip()
+
+    if not cleaned_city:
+        raise InvalidCityError("City cannot be empty.")
+
+    if not any(char.isalpha() for char in cleaned_city):
+        raise InvalidCityError("City must contain letters.")
+
+    return cleaned_city
+
 
 
 def normalize_shoot_type(shoot_type: str) -> str:
@@ -81,4 +93,14 @@ def normalize_shoot_type(shoot_type: str) -> str:
     # YOUR CODE GOES HERE 👇
     # TODO (STUDENT): Clean `shoot_type` and return it, or raise InvalidShootTypeError.
 
-    raise NotImplementedError("Person A: implement shoot type validation")  # DELETE LATER
+    if not isinstance(shoot_type, str):
+        raise InvalidShootTypeError("Shoot type must be a string.")
+
+    cleaned_type = shoot_type.strip().lower()
+
+    if cleaned_type not in SHOOT_TYPES:
+        raise InvalidShootTypeError(
+            f"Shoot type must be one of: {', '.join(SHOOT_TYPES)}"
+        )
+
+    return cleaned_type

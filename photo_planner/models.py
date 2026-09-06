@@ -83,8 +83,19 @@ class HourlyConditions:
         # TODO (STUDENT): Read the keys listed above from `slot`.
         # TODO (STUDENT): Return cls(...) with every field filled.
 
-        raise NotImplementedError("Person A: parse one forecast slot")  # DELETE LATER
-
+        return cls(
+            time_text=slot["dt_txt"],
+            timestamp_unix=slot["dt"],
+            temperature_c=slot["main"]["temp"],
+            feels_like_c=slot["main"]["feels_like"],
+            humidity=slot["main"]["humidity"],
+            wind_speed=slot["wind"]["speed"],
+            cloud_cover=slot["clouds"]["all"],
+            rain_probability=slot["pop"],
+            rain_mm=slot.get("rain", {}).get("3h", 0.0),
+            description=slot["weather"][0]["description"],
+            icon=slot["weather"][0]["icon"]
+        )
 
 @dataclass(frozen=True)
 class ForecastReport:
@@ -138,4 +149,20 @@ class ForecastReport:
         # TODO (STUDENT): Turn payload["list"] into a list of HourlyConditions.
         # TODO (STUDENT): Return cls(city=..., hours=..., ...).
 
-        raise NotImplementedError("Person A: parse the forecast JSON")  # DELETE LATER
+        city_data = payload["city"]
+
+        hours = []
+
+        for slot in payload["list"]:
+            hours.append(HourlyConditions.from_slot_json(slot))
+
+        return cls(
+            city=city_data["name"],
+            country=city_data["country"],
+            latitude=city_data["coord"]["lat"],
+            longitude=city_data["coord"]["lon"],
+            timezone_offset_seconds=city_data["timezone"],
+            sunrise_unix=city_data["sunrise"],
+            sunset_unix=city_data["sunset"],
+            hours=hours
+        )
