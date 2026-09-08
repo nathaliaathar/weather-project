@@ -17,14 +17,11 @@ from __future__ import annotations
 from photo_planner.models import HourlyConditions  # KEEP
 
 # WHY THIS EXISTS:
-# Plotly is the chart library. Import plotly.express or plotly.graph_objects
-# when you implement the functions below.
-# import plotly.express as px
-# import plotly.graph_objects as go
-
-# OPTIONAL: pandas is handy for turning scored_hours into a small table
-# before you plot. Import it when you need it.
-# import pandas as pd
+# Plotly Express (px) is enough for the MVP charts. Use graph_objects only
+# later if you need something px cannot do.
+import plotly.express as px
+# pandas: build a small table when a chart needs more than one Y series
+import pandas as pd
 
 
 def photography_score_chart(scored_hours: list[tuple[HourlyConditions, float]]):
@@ -45,8 +42,27 @@ def photography_score_chart(scored_hours: list[tuple[HourlyConditions, float]]):
 
     # YOUR CODE GOES HERE 👇
     # TODO (STUDENT): Build and return a Plotly figure of score vs time.
+    # empty lists that will hold the X and Y values for the chart
+    times = []
+    scores = []
 
-    raise NotImplementedError("Person B: Photography Score chart")  # DELETE LATER
+    # scored_hours is a list of (hour, score) pairs from scoring.py
+    for hour, score in scored_hours:
+        # get the time from the time_text ("2026-09-04 15:00:00" → "15:00:00")
+        clock = hour.time_text.split(" ")[1]
+        times.append(clock)   # X axis: clock time
+        scores.append(score)  # Y axis: photography score 0–100
+
+    # build a line chart with Plotly Express (no Streamlit here)
+    fig = px.line(
+        x=times,
+        y=scores,
+        title="Photography Score",
+        labels={"x": "Time", "y": "Score"},
+    )
+    # name the axes so the photographer can read the chart easily
+    fig.update_layout(xaxis_title="Time", yaxis_title="Score")
+    return fig  # app.py will show this with st.plotly_chart(...)
 
 
 def temperature_chart(scored_hours: list[tuple[HourlyConditions, float]]):
@@ -61,9 +77,28 @@ def temperature_chart(scored_hours: list[tuple[HourlyConditions, float]]):
     """
 
     # YOUR CODE GOES HERE 👇
-    # TODO (STUDENT): Build and return a Plotly figure of temperature vs time.
+    # TODO (STUDENT): same idea as photography_score_chart, but Y = hour.temperature_c
+    # HINT: loop scored_hours, collect times + temperatures, then px.line(...)
 
-    raise NotImplementedError("Person B: temperature chart")  # DELETE LATER
+    times = []
+    temperatures = []
+
+    for hour,score in scored_hours:
+        clock = hour.time_text.split(" ")[1]
+        times.append(clock)
+        temperatures.append(hour.temperature_c)
+
+    fig = px.line(
+        x=times,
+        y=temperatures,
+        title = "Temperature Over Time",
+        labels={"x": "Time", "y": "Temperature"},
+    )
+    fig.update_layout(xaxis_title="Time", yaxis_title="Temperature")
+    return fig  # app.py will show this with st.plotly_chart(...)
+
+
+    
 
 
 def clouds_and_rain_chart(scored_hours: list[tuple[HourlyConditions, float]]):
@@ -82,6 +117,35 @@ def clouds_and_rain_chart(scored_hours: list[tuple[HourlyConditions, float]]):
     """
 
     # YOUR CODE GOES HERE 👇
-    # TODO (STUDENT): Build and return a Plotly figure for clouds and/or rain.
+    # TODO (STUDENT): collect times, cloud_cover, and rain_probability (* 100 for %)
+    # HINT: you can put both series on one figure (two lines) with pandas + px.line
 
-    raise NotImplementedError("Person B: clouds / rain chart")  # DELETE LATER
+
+    # 2 lines in same chart. clouds & rain probability
+
+    times = []
+    clouds = []
+    rain = []
+
+    for hour,score in scored_hours:
+        clock = hour.time_text.split(" ")[1]
+        times.append(clock)
+        clouds.append(hour.cloud_cover)
+        rain.append(hour.rain_probability * 100)
+
+    df = pd.DataFrame({
+        "Time": times,
+        "Clouds": clouds,
+        "Rain": rain,
+    })
+
+    fig = px.line(
+        df,
+        x="Time",
+        y=["Clouds", "Rain"],
+        title="Clouds and Rain Probability",
+        labels={"x": "Time", "y": "Percentage"},
+    )
+    fig.update_layout(xaxis_title="Time", yaxis_title="Percentage")
+    return fig  # app.py will show this with st.plotly_chart(...)   
+    
