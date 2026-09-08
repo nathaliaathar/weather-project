@@ -5,10 +5,11 @@
 
 [theme]
 base = "light"
-primaryColor = "#c47b2b"
-backgroundColor = "#fffaf3"
+# Warm cream + burgundy — close to the Shoot Window mockup (tweak freely)
+primaryColor = "#6d2d2d"
+backgroundColor = "#fdfbf7"
 secondaryBackgroundColor = "#f4ece1"
-textColor = "#1b1f24"
+textColor = "#2b2420"
 font = "sans serif"
 
 [client]
