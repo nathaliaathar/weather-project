@@ -169,6 +169,18 @@ if plan:
     # ------------------------------------------------------------
     # STUDENT TASK 3: Show the decision (not raw weather dumps)
     # ------------------------------------------------------------
+    # YOUR CODE GOES HERE 👇
+    #
+    # Suggested layout — follow the page mockup in docs/PAIR.md:
+    #   1. Three st.metric in st.columns(3): score, best window, booked time
+    #   2. One st.success sentence (the recommendation)
+    #   3. Full-width Photography Score chart
+    #   4. st.columns(2): temperature_chart, clouds_and_rain_chart
+    #   5. OPTIONAL: st.expander("Why this hour?") with wind / rain / clouds
+    #
+    # TODO (STUDENT): Display score, recommendation text, and best window.
+    # TODO (STUDENT): Display at least the Photography Score chart.
+    
     if window is None:
         st.warning("No forecast hours found for that date. Try another day.")
         st.stop()
