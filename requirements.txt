@@ -11,6 +11,11 @@
 # KEEP — talks to the OpenWeatherMap forecast API over HTTP
 requests>=2.32.0
 
+# KEEP — on some Windows setups, Python cannot verify HTTPS with
+# the default cert bundle. This package uses the Windows certificate
+# store so requests.get(...) works (avoids CERTIFICATE_VERIFY_FAILED).
+pip-system-certs>=5.0
+
 # KEEP — loads OPENWEATHER_API_KEY from the .env file on your computer
 python-dotenv>=1.0.0
 
