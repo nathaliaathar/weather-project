@@ -23,6 +23,7 @@ from photo_planner.scoring import (  # KEEP
     best_shooting_window,
     hours_on_date,
     photography_score,
+    photography_score_breakdown,
     score_forecast,
 )
 
@@ -69,3 +70,18 @@ def test_best_window_has_start_end_and_score() -> None:
     start, end, score = window
     assert isinstance(start, str) and isinstance(end, str)
     assert 0 <= score <= 100
+
+
+def test_score_breakdown_matches_photography_score() -> None:
+    hour = _forecast().hours[0]
+    sunset = _forecast().sunset_unix
+    score = photography_score(hour, "portrait", sunset_unix=sunset)
+    breakdown = photography_score_breakdown(hour, "portrait", sunset_unix=sunset)
+    assert breakdown.score == score
+    assert 0 <= breakdown.rain <= 100
+    assert 0 <= breakdown.wind <= 100
+    assert 0 <= breakdown.temperature <= 100
+    assert 0 <= breakdown.clouds <= 100
+    assert abs(sum(breakdown.weights.values()) - 1.0) < 1e-9
+    assert "portrait" in breakdown.top_factors_sentence().lower()
+    assert breakdown.main_drag_sentence()

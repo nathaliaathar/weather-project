@@ -23,6 +23,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 # WHY THIS EXISTS:
@@ -33,7 +34,7 @@ from photo_planner.models import ForecastReport, HourlyConditions  # KEEP
 # WHY THIS EXISTS:
 # SHOOT_TYPES and normalize_shoot_type live in validation.py
 # so "Portrait" and "portrait" use the same list of types.
-from photo_planner.validation import SHOOT_TYPES, normalize_shoot_type
+from photo_planner.validation import normalize_shoot_type
 
 # ------------------------------------------------------------
 # STUDENT TASK 1: Decide weights with Dafna (on paper first)
@@ -52,7 +53,9 @@ from photo_planner.validation import SHOOT_TYPES, normalize_shoot_type
 #
 # TODO (STUDENT): Replace None with weights you both agree on.
 # DELETE LATER: the None placeholders, once real numbers are in.
-#ההיגיון: בפורטרט גשם ורוח מפריעים מאוד; בשקיעה העננות הכי משמעותית; בנוף עננות וגשם משפיעים יותר מרוח.
+#**Logic:** For portrait photography, rain and wind are major disruptions; for sunset photography, cloud cover is the most important factor;
+#and for landscape photography, cloud cover and rain have a greater impact than wind.
+
 SHOOT_WEIGHTS = {
     "portrait": {
         "rain": 0.35,
@@ -61,79 +64,91 @@ SHOOT_WEIGHTS = {
         "clouds": 0.15,
     },
     "sunset": {
-        "rain": 0.25,
+        "rain": 0.55,
         "wind": 0.10,
         "temperature": 0.10,
-        "clouds": 0.55,
+        "clouds": 0.25,
     },
     "landscape": {
-        "rain": 0.30,
+        "rain": 0.40,
         "wind": 0.15,
         "temperature": 0.15,
-        "clouds": 0.40,
+        "clouds": 0.30,
     },
 }
 
+FACTOR_LABELS = {
+    "rain": "Rain",
+    "wind": "Wind",
+    "temperature": "Temp",
+    "clouds": "Clouds",
+}
 
-def photography_score(
+
+@dataclass(frozen=True)
+class ScoreBreakdown:
+    """Photography score plus per-factor goodness and weights for one hour."""
+
+    score: float
+    shoot_type: str
+    rain: float
+    wind: float
+    temperature: float
+    clouds: float
+    weights: dict[str, float]
+
+    def goodness_map(self) -> dict[str, float]:
+        return {
+            "rain": self.rain,
+            "wind": self.wind,
+            "temperature": self.temperature,
+            "clouds": self.clouds,
+        }
+
+    def top_factors_sentence(self) -> str:
+        """Short copy from the two highest weights for this shoot type."""
+        ranked = sorted(self.weights.items(), key=lambda item: item[1], reverse=True)
+        first = FACTOR_LABELS[ranked[0][0]].lower()
+        second = FACTOR_LABELS[ranked[1][0]].lower()
+        return f"For {self.shoot_type}, {first} and {second} matter most."
+
+    def main_drag_sentence(self) -> str:
+        """Name the factor that pulls the weighted score down the most."""
+        goodness = self.goodness_map()
+        drag = {
+            name: (100.0 - goodness[name]) * self.weights[name]
+            for name in goodness
+        }
+        worst = max(drag, key=drag.get)
+        if drag[worst] < 1.0:
+            return "No single factor is reducing the score much."
+        return f"{FACTOR_LABELS[worst]} reduced the score."
+
+
+def photography_score_breakdown(
     hour: HourlyConditions,
     shoot_type: str,
     sunset_unix: int | None = None,
-) -> float:
+) -> ScoreBreakdown:
     """
-    YOUR TASK:
+    Convert one hour into goodness scores and the weighted Photography Score.
 
-    `hour` is one 3-hour slot (temperature, wind, clouds, rain chance, ...).
-    `shoot_type` is "portrait", "sunset", or "landscape".
-    `sunset_unix` is the city's sunset time (useful for sunset shoots).
-
-    Return a Photography Score from 0 to 100 (higher = better to shoot).
-
-    Think like a photographer, not like a weather app:
-      - very low rain chance → usually good
-      - strong wind → often bad for portrait
-      - comfortable temperature → usually good
-      - cloud cover: "good" depends on the shoot type
-      - for sunset: a slot close to sunset may deserve extra points
-
-    Called by:
-        score_forecast (this same file)
-        tests/test_scoring.py
-
-    HINT:
-    1. Turn EACH weather field into a 0–100 "goodness" number.
-       Example question: if rain_probability is 0.9, should rain_goodness
-       be high or low?
-    2. Combine those numbers using SHOOT_WEIGHTS[shoot_type].
-    3. Clip the final result so it stays between 0 and 100.
-
-    Do not copy a formula from the internet. The interesting part of this
-    project is YOUR rule set. Write a short comment above each factor
-    explaining the rule in one sentence.
+    `sunset_unix` is reserved for optional sunset boosts; current weights
+    do not use it yet. Callers that only need the number can use
+    photography_score(...), which wraps this function.
     """
-
-    # YOUR CODE GOES HERE 👇
-    # TODO (STUDENT): Convert rain, wind, temperature, clouds into goodness scores.
-    # TODO (STUDENT): Combine them with SHOOT_WEIGHTS for this shoot_type.
-    # TODO (STUDENT): Return a float between 0 and 100.
-    #
-    # OPTIONAL: use sunset_unix for sunset shoots (hours away from sunset).
-
+    _ = sunset_unix  # reserved for Phase 2 sunset proximity boost
     shoot_type = normalize_shoot_type(shoot_type)
-
     weights = SHOOT_WEIGHTS[shoot_type]
 
     # Less chance of rain is better
     rain_goodness = 100 * (1 - hour.rain_probability)
 
     # Strong wind lowers the score
-    wind_goodness = max(0, 100 - hour.wind_speed * 15)
+    wind_goodness = max(0.0, 100 - hour.wind_speed * 15)
 
     # Around 22°C is considered comfortable for an outdoor shoot
-    temperature_goodness = max(
-        0,
-        100 - abs(hour.temperature_c - 22) * 5
-    )
+    temperature_goodness = max(0.0, 100 - abs(hour.temperature_c - 22) * 5)
 
     # Different shoot types prefer different cloud coverage
     if shoot_type == "portrait":
@@ -143,19 +158,40 @@ def photography_score(
     else:
         ideal_clouds = 35
 
-    cloud_goodness = max(
-        0,
-        100 - abs(hour.cloud_cover - ideal_clouds) * 1.5
-    )
+    cloud_goodness = max(0.0, 100 - abs(hour.cloud_cover - ideal_clouds) * 1.5)
 
     score = (
-            rain_goodness * weights["rain"]
-            + wind_goodness * weights["wind"]
-            + temperature_goodness * weights["temperature"]
-            + cloud_goodness * weights["clouds"]
+        rain_goodness * weights["rain"]
+        + wind_goodness * weights["wind"]
+        + temperature_goodness * weights["temperature"]
+        + cloud_goodness * weights["clouds"]
+    )
+    score = float(max(0.0, min(100.0, score)))
+
+    return ScoreBreakdown(
+        score=score,
+        shoot_type=shoot_type,
+        rain=float(rain_goodness),
+        wind=float(wind_goodness),
+        temperature=float(temperature_goodness),
+        clouds=float(cloud_goodness),
+        weights=dict(weights),
     )
 
-    return float(max(0, min(100, score)))
+
+def photography_score(
+    hour: HourlyConditions,
+    shoot_type: str,
+    sunset_unix: int | None = None,
+) -> float:
+    """
+    Return a Photography Score from 0 to 100 (higher = better to shoot).
+
+    Called by:
+        score_forecast (this same file)
+        tests/test_scoring.py
+    """
+    return photography_score_breakdown(hour, shoot_type, sunset_unix).score
 
 
 def hours_on_date(forecast: ForecastReport, shoot_date: str) -> list[HourlyConditions]:
