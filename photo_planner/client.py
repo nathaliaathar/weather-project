@@ -103,14 +103,27 @@ class OpenWeatherClient:
 
         params = self._params(clean_city, units)
 
-        response = requests.get(
-            FORECAST_URL,
-            params=params,
-            timeout=self.timeout_seconds
-        )
+        try:
+            response = requests.get(
+                FORECAST_URL,
+                params=params,
+                timeout=self.timeout_seconds,
+            )
+        except requests.exceptions.SSLError as err:
+            raise WeatherRequestError(
+                "Could not verify the weather site's security certificate (SSL). "
+                "On Windows, install project deps with: pip install -r requirements.txt"
+            ) from err
+        except requests.exceptions.RequestException as err:
+            raise WeatherRequestError(
+                f"Could not reach the weather service: {err}"
+            ) from err
 
         if response.status_code == 401:
-            raise InvalidApiKeyError("Invalid OpenWeather API key.")
+            raise InvalidApiKeyError(
+                "Invalid OpenWeather API key. "
+                "Check .env (OPENWEATHER_API_KEY) or wait if the key is brand new."
+            )
 
         if response.status_code == 404:
             raise CityNotFoundError(f"City not found: {clean_city}")
