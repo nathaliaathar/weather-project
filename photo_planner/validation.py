@@ -24,6 +24,18 @@ from photo_planner.errors import InvalidCityError, InvalidShootTypeError  # KEEP
 # KEEP this tuple. Add a type only if you and Dafna agree to score it.
 SHOOT_TYPES = ("portrait", "sunset", "landscape")  # KEEP
 
+# KEEP — shared location list for the planner form and the city heatmap.
+ISRAEL_CITIES = (
+    "Tel Aviv",
+    "Jerusalem",
+    "Haifa",
+    "Herzliya",
+    "Eilat",
+    "Netanya",
+    "Caesarea",
+    "Akko",
+)
+
 
 def normalize_city_name(city: str) -> str:
     """

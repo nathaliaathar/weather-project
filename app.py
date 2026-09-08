@@ -21,7 +21,7 @@
 
 from __future__ import annotations
 
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
 
 # WHY THIS EXISTS:
 # streamlit turns this Python file into a web page.
@@ -44,6 +44,42 @@ ISRAEL_CITIES = [  # KEEP
     "Caesarea",
     "Akko",
 ]
+
+SHOOT_TYPES = ("portrait", "sunset", "landscape")
+
+
+def _default_city() -> str:
+    saved = st.session_state.get("city", ISRAEL_CITIES[0])
+    return saved if saved in ISRAEL_CITIES else ISRAEL_CITIES[0]
+
+
+def _default_date() -> date:
+    today = date.today()
+    saved = st.session_state.get("shoot_date")
+    if isinstance(saved, str):
+        try:
+            parsed = datetime.strptime(saved, "%Y-%m-%d").date()
+            if today <= parsed <= today + timedelta(days=4):
+                return parsed
+        except ValueError:
+            pass
+    return today + timedelta(days=1)
+
+
+def _default_time() -> time:
+    saved = st.session_state.get("preferred_time", "17:00")
+    if isinstance(saved, time):
+        return saved
+    try:
+        return datetime.strptime(str(saved), "%H:%M").time()
+    except ValueError:
+        return time(17, 0)
+
+
+def _default_shoot_type() -> str:
+    saved = str(st.session_state.get("shoot_type", SHOOT_TYPES[0])).lower()
+    return saved if saved in SHOOT_TYPES else SHOOT_TYPES[0]
+
 
 # ------------------------------------------------------------
 # OPTIONAL polish: hide the multipage sidebar for a cleaner look
@@ -109,25 +145,32 @@ with col_form:
     # WHY 2x2: mockup uses a grid, not one long row of 4 fields.
     row1_left, row1_right = st.columns(2)
     with row1_left:
-        city = st.selectbox("Location", ISRAEL_CITIES, index=0)  # KEEP
+        city = st.selectbox(
+            "Location",
+            ISRAEL_CITIES,
+            index=ISRAEL_CITIES.index(_default_city()),
+        )  # KEEP
     with row1_right:
         # KEEP — free forecast covers about 5 days from today
         today = date.today()
         shoot_date = st.date_input(
             "Date",
-            value=today + timedelta(days=1),
+            value=_default_date(),
             min_value=today,
             max_value=today + timedelta(days=4),
         )
 
     row2_left, row2_right = st.columns(2)
     with row2_left:
-        preferred_time = st.time_input("Preferred time", value=time(17, 0))  # KEEP
+        preferred_time = st.time_input(
+            "Preferred time",
+            value=_default_time(),
+        )  # KEEP
     with row2_right:
         shoot_type = st.selectbox(  # KEEP
             "Photography type",
-            ("portrait", "sunset", "landscape"),
-            index=0,
+            SHOOT_TYPES,
+            index=SHOOT_TYPES.index(_default_shoot_type()),
         )
 
     plan = st.button("Plan shoot →", type="primary", use_container_width=True)  # KEEP
@@ -146,6 +189,8 @@ with col_form:
         st.session_state["preferred_time"] = preferred_time.strftime("%H:%M")
         st.session_state["shoot_type"] = shoot_type
         st.session_state["plan_ready"] = True
+        st.session_state["heatmap_page"] = 0
+        st.session_state["heatmap_city_filter"] = "All cities"
         # KEEP — Streamlit opens pages/results.py as a second page
         st.switch_page("pages/results.py")
 

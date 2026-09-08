@@ -1,15 +1,12 @@
 # Theme for the Streamlit page (colors and layout).
-# This is not Python. Streamlit reads it automatically from this folder.
-# Person B may tweak colors later. You do not need this file to learn the API.
-# Warm gold is a nod to outdoor / golden-hour photography — change it if you want.
+# Matches the Shoot Window results mockup palette.
 
 [theme]
 base = "light"
-# Warm cream + burgundy — close to the Shoot Window mockup (tweak freely)
-primaryColor = "#6d2d2d"
-backgroundColor = "#fdfbf7"
-secondaryBackgroundColor = "#f4ece1"
-textColor = "#2b2420"
+primaryColor = "#7B3C3C"
+backgroundColor = "#F0F0E4"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#7B3C3C"
 font = "sans serif"
 
 [client]
