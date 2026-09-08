@@ -36,25 +36,25 @@ from dotenv import load_dotenv  # KEEP
 # OpenWeatherClient is written in photo_planner/client.py.
 # This import lets app.py call get_forecast() without talking to the API itself.
 # Uncomment this line when you are ready to connect the UI to the client.
-# from photo_planner.client import OpenWeatherClient
+from photo_planner.client import OpenWeatherClient
 
 # WHY THIS EXISTS:
 # WeatherError is the parent of all weather errors (invalid city, 404, bad key).
 # Catching WeatherError lets you show a friendly message with st.error(...).
-# from photo_planner.errors import WeatherError
+from photo_planner.errors import WeatherError
 
 # WHY THIS EXISTS:
 # score_forecast and best_shooting_window are written in scoring.py.
 # That file is the product — this page only displays what they return.
-# from photo_planner.scoring import score_forecast, best_shooting_window
+from photo_planner.scoring import score_forecast, best_shooting_window
 
 # WHY THIS EXISTS:
 # Chart functions are written in charts.py.
-# from photo_planner.charts import (
-#     photography_score_chart,
-#     temperature_chart,
-#     clouds_and_rain_chart,
-# )
+from photo_planner.charts import (
+    photography_score_chart,
+    temperature_chart,
+    clouds_and_rain_chart,
+)
 
 # WHY THIS EXISTS:
 # SHOOT_TYPES is written in photo_planner/validation.py.
@@ -145,49 +145,59 @@ if plan:
     # ------------------------------------------------------------
     # STUDENT TASK 2: Fetch forecast + compute Photography Score
     # ------------------------------------------------------------
-    # YOUR CODE GOES HERE 👇
-    #
-    # Goal:
-    #   1. Check that _api_key() is not empty. If it is, st.error(...) and stop.
-    #   2. Create OpenWeatherClient(api_key=_api_key())
-    #   3. forecast = client.get_forecast(city)   inside try/except WeatherError
-    #   4. scored = score_forecast(forecast, shoot_type, shoot_date.isoformat())
-    #   5. window = best_shooting_window(scored)
-    #
-    # HINT:
-    #   shoot_date.isoformat() turns a date into "2026-09-04".
-    #   preferred_time is the booked slot — you can highlight the nearest
-    #   3-hour forecast, but the BEST window comes from the scores.
-    #
-    # TODO (STUDENT): Create the client and fetch a ForecastReport for `city`.
-    # TODO (STUDENT): Call score_forecast and best_shooting_window.
+    api_key = _api_key()
+    if not api_key:
+        st.error("Missing API key. Copy .env.example to .env.")
+        st.stop()
 
-    st.info(
-        "Person B: after scoring works, replace this box with the "
-        "Photography Score, a short recommendation, and the charts."
-    )  # DELETE LATER when you display real data
+    try:
+        client = OpenWeatherClient(api_key=api_key)
+        forecast = client.get_forecast(city)
+
+        scored = score_forecast(
+            forecast,
+            shoot_type,
+            shoot_date.isoformat(),
+        )
+        window = best_shooting_window(scored)
+        # window is (start_time, end_time, best_score) or None
+
+    except WeatherError as err:
+        st.error(str(err))
+        st.stop()
 
     # ------------------------------------------------------------
     # STUDENT TASK 3: Show the decision (not raw weather dumps)
     # ------------------------------------------------------------
-    # YOUR CODE GOES HERE 👇
-    #
-    # Suggested layout — follow the page mockup in docs/PAIR.md:
-    #   1. Three st.metric in st.columns(3): score, best window, booked time
-    #   2. One st.success sentence (the recommendation)
-    #   3. Full-width Photography Score chart
-    #   4. st.columns(2): temperature_chart, clouds_and_rain_chart
-    #   5. OPTIONAL: st.expander("Why this hour?") with wind / rain / clouds
-    #
-    # HINT:
-    #   Do not print the whole JSON. The photographer wants a decision.
-    #   You may still show wind / rain / clouds as small st.metric helpers
-    #   under the score so the recommendation is trustworthy.
-    #
-    # TODO (STUDENT): Display score, recommendation text, and best window.
-    # TODO (STUDENT): Display at least the Photography Score chart.
+    if window is None:
+        st.warning("No forecast hours found for that date. Try another day.")
+        st.stop()
 
-    pass  # DELETE LATER when this block has real display code
+    start, end, best_score = window
+
+    st.caption(f"{city}  ·  {shoot_date}  ·  {shoot_type}")
+
+    col_score, col_window, col_booked = st.columns(3)
+    with col_score:
+        st.metric("Photography Score", f"{best_score} / 100")
+    with col_window:
+        st.metric("Best shooting window", f"{start} – {end}")
+    with col_booked:
+        st.metric("Your booked time", preferred_time.strftime("%H:%M"))
+
+    st.success(
+        f"Conditions look good for a {shoot_type} session in {city}. "
+        f"Best shooting window: {start}–{end} (score {best_score})."
+    )
+
+    st.subheader("Photography Score during the day")
+    st.plotly_chart(photography_score_chart(scored), use_container_width=True)
+
+    col_temp, col_sky = st.columns(2)
+    with col_temp:
+        st.plotly_chart(temperature_chart(scored), use_container_width=True)
+    with col_sky:
+        st.plotly_chart(clouds_and_rain_chart(scored), use_container_width=True)
 
 else:
     st.write(  # KEEP
