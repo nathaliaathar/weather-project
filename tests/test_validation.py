@@ -36,6 +36,7 @@ def test_rejects_empty() -> None:
 #@pytest.mark.skip(reason="Remove this skip after implementing normalize_shoot_type")
 def test_shoot_type_lowercase() -> None:
     assert normalize_shoot_type("Portrait") == "portrait"
+    assert normalize_shoot_type("Event") == "event"
 
 
 # TODO (STUDENT): After unknown types raise InvalidShootTypeError, delete this skip.

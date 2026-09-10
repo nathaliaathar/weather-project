@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from photo_planner.models import HourlyConditions  # KEEP
+from photo_planner.scoring import display_score
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -36,32 +37,53 @@ def _minutes(label: str) -> int:
     return int(hours) * 60 + int(mins)
 
 
-CHART_HEIGHT = 280
+CHART_HEIGHT = 240
+
+# Room on the left of the heatmap for the longest city name
+# ("● Tel Aviv", "Jerusalem") so it is never cut off.
+HEATMAP_LEFT_MARGIN = 92
 
 
-def _compact_layout(fig: go.Figure, *, height: int = CHART_HEIGHT) -> go.Figure:
+def _compact_layout(
+    fig: go.Figure,
+    *,
+    height: int = CHART_HEIGHT,
+    left: int = 40,
+    right: int = 32,
+    top: int = 28,
+    bottom: int = 36,
+) -> go.Figure:
+    """Shared look for every chart. The margins can grow when a chart
+    needs more room, e.g. the heatmap needs space for the city names."""
     fig.update_layout(
         height=height,
-        margin=dict(l=48, r=48, t=28, b=40),
-        paper_bgcolor="#FFFFFF",
-        plot_bgcolor="#FFFFFF",
+        margin=dict(l=left, r=right, t=top, b=bottom),
+        paper_bgcolor="white",
+        plot_bgcolor="white",
         font=dict(color=BURGUNDY, size=12),
-        title=None,
+        title=dict(text=""),
         showlegend=False,
+        dragmode=False,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, font=dict(size=11)),
     )
-    fig.update_xaxes(showgrid=False, tickfont=dict(size=11), title_font=dict(size=12))
+    fig.update_xaxes(
+        showgrid=False,
+        tickfont=dict(size=12),
+        title_font=dict(size=12),
+        fixedrange=True,
+    )
     fig.update_yaxes(
         showgrid=True,
         gridcolor="rgba(123,60,60,0.14)",
-        tickfont=dict(size=11),
+        tickfont=dict(size=12),
         title_font=dict(size=12),
+        fixedrange=True,
     )
     return fig
 
 
 def photography_score_chart(
-    scored_hours: list[tuple[HourlyConditions, float]],
+    scored_hours: list[tuple[HourlyConditions, float | None]],
     *,
     window_start: str | None = None,
     window_end: str | None = None,
@@ -72,12 +94,17 @@ def photography_score_chart(
     Optionally shades the best window and marks the booked time.
 
     Uses numeric x positions so Plotly vrect/vline work reliably;
-    tick labels still show clock times.
+    tick labels still show clock times. Displayed values are integers.
+    Missing scores stay gaps, never coerced to 0.
     """
     _ = window_end  # window length is derived from consecutive slots
     times = [_clock_label(hour.time_text) for hour, _ in scored_hours]
-    scores = [score for _, score in scored_hours]
+    scores = [
+        None if score is None else float(display_score(score))
+        for _, score in scored_hours
+    ]
     x_idx = list(range(len(times)))
+    labels = ["" if s is None else str(int(s)) for s in scores]
 
     fig = go.Figure()
     fig.add_trace(
@@ -88,14 +115,13 @@ def photography_score_chart(
             name="Score",
             line=dict(color=BURGUNDY, width=3),
             marker=dict(size=9, color=BURGUNDY),
-            text=[
-                f"{s:.0f}" if abs(s - round(s)) < 0.05 else f"{s:.1f}"
-                for s in scores
-            ],
+            text=labels,
             textposition="top center",
-            textfont=dict(size=11, color=BURGUNDY),
+            textfont=dict(size=12, color=BURGUNDY),
+            cliponaxis=False,
             customdata=times,
-            hovertemplate="Time %{customdata}<br>Score %{y:.1f}<extra></extra>",
+            hovertemplate="Time %{customdata}<br>Score %{y:.0f}<extra></extra>",
+            connectgaps=False,
         )
     )
 
@@ -115,7 +141,7 @@ def photography_score_chart(
             line_width=0,
             annotation_text="Best window",
             annotation_position="top left",
-            annotation_font_size=11,
+            annotation_font_size=12,
             annotation_font_color=BURGUNDY,
         )
 
@@ -142,16 +168,18 @@ def photography_score_chart(
             line_width=2,
             annotation_text=f"Booked {booked_time}",
             annotation_position="top right",
-            annotation_font_size=11,
+            annotation_font_size=12,
             annotation_font_color=ORANGE,
         )
 
-    fig.update_yaxes(range=[0, 108], title_text="Score")
+    fig.update_yaxes(range=[0, 118], title_text="Score")
     fig.update_xaxes(
         title_text="",
         tickmode="array",
         tickvals=x_idx,
         ticktext=times,
+        # Extra room so the first/last value labels are not cut off
+        range=[-0.6, len(times) - 0.4] if times else None,
     )
     fig.update_layout(showlegend=False)
     return _compact_layout(fig)
@@ -173,11 +201,17 @@ def temperature_chart(scored_hours: list[tuple[HourlyConditions, float]]):
             marker=dict(size=9, color=ORANGE),
             text=[f"{t:.1f}" for t in temperatures],
             textposition="top center",
-            textfont=dict(size=11, color=ORANGE),
+            textfont=dict(size=12, color=ORANGE),
+            cliponaxis=False,
             hovertemplate="Time %{x}<br>%{y:.1f} °C<extra></extra>",
         )
     )
     fig.update_yaxes(title_text="°C")
+    if temperatures:
+        low = min(temperatures)
+        high = max(temperatures)
+        extra = max(2.0, (high - low) * 0.2)
+        fig.update_yaxes(range=[low - extra * 0.25, high + extra])
     fig.update_xaxes(title_text="")
     fig.update_layout(showlegend=False)
     return _compact_layout(fig)
@@ -264,13 +298,16 @@ def city_scores_heatmap(
                 row_z.append(None)
                 row_text.append("—")
             else:
-                row_z.append(value)
-                row_text.append(f"{value:.0f}")
+                shown = display_score(value)
+                row_z.append(shown)
+                row_text.append(str(shown))
         z.append(row_z)
         text.append(row_text)
 
     y_labels = [f"● {city}" if city == selected_city else city for city in cities]
 
+    # Absolute 0–100 legend: coral at 0, blue at 100.
+    # Extra stops in the mid/high band so nearby scores (e.g. 70 vs 80) read clearly.
     fig = go.Figure(
         data=go.Heatmap(
             z=z,
@@ -278,12 +315,17 @@ def city_scores_heatmap(
             y=y_labels,
             text=text,
             texttemplate="%{text}",
-            textfont=dict(size=12),
+            textfont=dict(size=13),
             colorscale=[
-                [0.0, SKY],
-                [0.55, "#C97B6B"],
-                [1.0, BURGUNDY],
+                [0.00, ORANGE],
+                [0.35, "#E8926A"],
+                [0.50, "#D4A090"],
+                [0.62, "#B9B3B0"],
+                [0.74, "#8BBFD9"],
+                [0.88, "#74B8DE"],
+                [1.00, SKY],
             ],
+            reversescale=False,
             zmin=0,
             zmax=100,
             colorbar=dict(
@@ -291,6 +333,7 @@ def city_scores_heatmap(
                 thickness=10,
                 len=0.85,
                 tickfont=dict(size=9),
+                tickvals=[0, 25, 50, 75, 100],
             ),
             hovertemplate="%{y}<br>%{x}<br>Score %{z}<extra></extra>",
             xgap=2,
@@ -298,7 +341,9 @@ def city_scores_heatmap(
         )
     )
     fig.update_layout(
-        xaxis=dict(side="bottom", title=""),
-        yaxis=dict(title="", autorange="reversed"),
+        xaxis=dict(side="bottom", title="", fixedrange=True),
+        yaxis=dict(title="", autorange="reversed", fixedrange=True),
     )
-    return _compact_layout(fig)
+    # Wide left margin so the full city name is visible, and small
+    # top/bottom margins so the rows stay tall enough to read.
+    return _compact_layout(fig, left=HEATMAP_LEFT_MARGIN, right=58, top=10, bottom=30)

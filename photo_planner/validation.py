@@ -22,7 +22,7 @@ from photo_planner.errors import InvalidCityError, InvalidShootTypeError  # KEEP
 # These are the photography types the product supports in the MVP.
 # Person B should use the same list in the Streamlit dropdown.
 # KEEP this tuple. Add a type only if you and Dafna agree to score it.
-SHOOT_TYPES = ("portrait", "sunset", "landscape")  # KEEP
+SHOOT_TYPES = ("portrait", "event", "sunset", "landscape")  # KEEP
 
 # KEEP — shared location list for the planner form and the city heatmap.
 ISRAEL_CITIES = (

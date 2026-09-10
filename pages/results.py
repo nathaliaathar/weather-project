@@ -1,19 +1,9 @@
 # ============================================================
 # WHAT THIS FILE DOES
 # ============================================================
-# This is the RESULTS page — the second screen of the app.
-#
-# It reads the photographer's choices from st.session_state
-# (saved on the home page), then:
-#   1. Calls the weather client
-#   2. Calls scoring.py (Photography Score + best window)
-#   3. Shows metrics, recommendation, and charts
-#
-# WHY THIS FILE LIVES IN pages/:
-# Streamlit turns every .py file inside pages/ into another
-# page of the app. Home = app.py. Results = this file.
-#
-# Person B owns the UI. Scoring/API stay in photo_planner/.
+# RESULTS page: score, best window, booked time, and charts.
+# Left column explains HOW the score was built for the type
+# the photographer chose. Right column is the plan + charts.
 # ============================================================
 
 from __future__ import annotations
@@ -22,8 +12,8 @@ import os
 from datetime import datetime, time
 from pathlib import Path
 
-import streamlit as st  # KEEP
-from dotenv import load_dotenv  # KEEP
+import streamlit as st
+from dotenv import load_dotenv
 
 from photo_planner.charts import (
     CHART_HEIGHT,
@@ -35,19 +25,52 @@ from photo_planner.charts import (
 from photo_planner.client import OpenWeatherClient
 from photo_planner.errors import WeatherError
 from photo_planner.scoring import (
+    FACTOR_LABELS,
+    FACTOR_NAMES,
+    SHOOT_WEIGHTS,
+    STATUS_NOT_RECOMMENDED,
+    STATUS_UNAVAILABLE,
     best_shooting_window,
+    condition_label,
+    score_booked_interval,
     score_forecast,
 )
-from photo_planner.validation import ISRAEL_CITIES
+from photo_planner.validation import ISRAEL_CITIES, SHOOT_TYPES
 
-load_dotenv()  # KEEP
+load_dotenv()
 
 BURGUNDY = "#7B3C3C"
-IVORY = "#F0F0E4"
-
+IVORY = "#F3EFE6"
 LOGO_PATH = Path(__file__).resolve().parents[1] / "assets" / "logo.png"
 
-st.set_page_config(  # KEEP
+# Why this type uses these weights — only the chosen type is shown.
+TYPE_WHY = {
+    "portrait": (
+        "Light is the priority (40%), then rain and wind to keep your "
+        "subject comfortable and the session manageable."
+    ),
+    "event": (
+        "Rain matters most (35%) because it can disrupt a schedule "
+        "that may be difficult to change."
+    ),
+    "sunset": (
+        "The sun’s position and sky conditions have the greatest "
+        "influence (light 55%)."
+    ),
+    "landscape": (
+        "Lighting and visibility help bring out the scene, while rain "
+        "and wind affect shooting conditions."
+    ),
+}
+
+TYPE_WEIGHT_TEXT = {
+    "portrait": "Light 40%, rain 25%, wind 20%, comfort 10%, visibility 5%.",
+    "event": "Light 30%, rain 35%, wind 20%, comfort 10%, visibility 5%.",
+    "sunset": "Light 55%, rain 20%, wind 10%, comfort 5%, visibility 10%.",
+    "landscape": "Light 45%, rain 20%, wind 15%, comfort 5%, visibility 15%.",
+}
+
+st.set_page_config(
     page_title="Results — Shoot Window",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -65,89 +88,169 @@ st.markdown(
         background-color: {IVORY} !important;
       }}
       .block-container {{
-        padding-top: 0.7rem !important;
-        padding-bottom: 0.8rem !important;
-        padding-left: 1.4rem !important;
-        padding-right: 1.4rem !important;
-        max-width: 1320px;
+        padding-top: 0.35rem !important;
+        padding-bottom: 0.5rem !important;
+        padding-left: 1.1rem !important;
+        padding-right: 1.1rem !important;
+        max-width: 1680px;
+      }}
+      [data-testid="stMainBlockContainer"] {{
+        max-width: 1680px;
+      }}
+      [data-testid="stVerticalBlock"] {{
+        gap: 0.32rem !important;
+      }}
+      [data-testid="stHorizontalBlock"] {{
+        gap: 0.7rem !important;
       }}
       h1 {{
         color: {BURGUNDY} !important;
-        font-size: 1.55rem !important;
-        margin: 0.1rem 0 0.15rem 0 !important;
-        line-height: 1.15 !important;
+        font-size: 1.4rem !important;
+        margin: 0 !important;
       }}
       h3 {{
         color: {BURGUNDY} !important;
-        font-size: 0.95rem !important;
-        margin: 0.15rem 0 !important;
+        font-size: 1.35rem !important;
+        margin: 0.1rem 0 !important;
       }}
       .sw-brand {{
-        display: flex; align-items: center; gap: 0.45rem;
         color: {BURGUNDY}; font-weight: 700; font-size: 1.05rem;
       }}
       .sw-tagline {{
         color: {BURGUNDY}; opacity: 0.75; font-size: 0.85rem;
-        text-align: right; padding-top: 0.2rem;
+        text-align: right;
       }}
       .sw-caption {{
-        color: {BURGUNDY}; opacity: 0.8; font-size: 0.85rem;
-        margin: 0 0 0.4rem 0;
+        color: {BURGUNDY}; opacity: 0.8; font-size: 0.8rem;
+        margin: 0.08rem 0 0 0;
+      }}
+      .sw-ready {{
+        display: inline-block;
+        background: #E5F3EA;
+        color: #2F6B45;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.12rem 0.45rem;
+        border-radius: 999px;
+        margin-left: 0.4rem;
+        vertical-align: middle;
       }}
       .sw-card {{
         background: #fff;
-        border: 1.5px solid {BURGUNDY};
+        border: 1px solid #E4DDD3;
         border-radius: 12px;
-        padding: 0.55rem 0.8rem 0.5rem 0.8rem;
-        min-height: 78px;
+        padding: 0.45rem 0.75rem;
+        min-height: 72px;
       }}
+      .sw-card-teal {{ background: #D8EEF4; border-color: #C5E4ED; }}
+      .sw-card-peach {{ background: #F8E6D8; border-color: #F0D7C4; }}
       .sw-card-label {{
-        color: {BURGUNDY}; font-size: 0.78rem; font-weight: 600;
-        margin-bottom: 0.12rem;
+        color: {BURGUNDY}; font-size: 0.74rem; font-weight: 600;
       }}
       .sw-card-value {{
-        color: {BURGUNDY}; font-size: 1.35rem; font-weight: 700;
-        line-height: 1.15;
+        color: {BURGUNDY}; font-size: 1.25rem; font-weight: 700;
+        line-height: 1.15; margin: 0.05rem 0;
       }}
       .sw-card-sub {{
-        color: {BURGUNDY}; opacity: 0.75; font-size: 0.72rem;
-        margin-top: 0.12rem;
+        color: {BURGUNDY}; opacity: 0.75; font-size: 0.7rem;
       }}
-      [data-testid="stHorizontalBlock"] {{
-        align-items: stretch !important;
+      .sw-mean {{
+        background: #D8EEF4;
+        border-radius: 10px;
+        padding: 0.5rem 0.65rem;
+        color: {BURGUNDY};
+        font-size: 0.74rem;
+        line-height: 1.35;
+        margin-top: 0.2rem;
+        margin-bottom: 0.5cm;
+      }}
+      /* 0.5 cm between rows of cards.
+         "A ~ B" means: a row that comes after another row.
+         The very first row (the page title) keeps no extra space. */
+      [data-testid="stHorizontalBlock"] ~ [data-testid="stHorizontalBlock"] {{
+        margin-top: 0.5cm !important;
+      }}
+      /* The small title row inside a chart card is not a page row. */
+      div[data-testid="stVerticalBlockBorderWrapper"]
+        [data-testid="stHorizontalBlock"] {{
+        margin-top: 0 !important;
+      }}
+      /* Fixed header height so both cards in a row line up */
+      .sw-chart-head {{
+        background: #ffffff;
+        background-color: #ffffff;
+        height: 3rem;
+        padding: 0.15rem 0 0.2rem 0;
+        overflow: visible;
+      }}
+      .sw-chart-name {{
+        color: {BURGUNDY};
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.25;
+        background: #ffffff;
+      }}
+      .sw-chart-sub {{
+        color: {BURGUNDY};
+        opacity: 0.8;
+        font-size: 0.82rem;
+        margin: 0.08rem 0 0 0;
+        line-height: 1.3;
+        background: #ffffff;
       }}
       div[data-testid="stVerticalBlockBorderWrapper"] {{
         background: #ffffff !important;
-        border: 1.5px solid {BURGUNDY} !important;
-        border-radius: 12px !important;
-        padding: 0.55rem 0.7rem 0.4rem 0.7rem !important;
-        margin-bottom: 0.55rem;
-        height: 100% !important;
-        box-sizing: border-box;
+        background-color: #ffffff !important;
+        opacity: 1 !important;
+        border: 1px solid #E4DDD3 !important;
+        border-radius: 14px !important;
+        padding: 0.5rem 0.7rem 0.5rem 0.7rem !important;
+        overflow: visible !important;
       }}
-      .sw-chart-title {{
-        color: {BURGUNDY};
-        font-size: 0.92rem;
-        font-weight: 700;
-        margin: 0;
-        height: 2.4rem;
-        line-height: 2.4rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      div[data-testid="stVerticalBlockBorderWrapper"] > div,
+      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"],
+      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stHorizontalBlock"],
+      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stElementContainer"],
+      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stMarkdownContainer"],
+      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stCaptionContainer"],
+      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stScrollToBottomContainer"],
+      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stPlotlyChart"],
+      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stPlotlyChart"] > div,
+      div[data-testid="stVerticalBlockBorderWrapper"] .stPlotlyChart,
+      div[data-testid="stVerticalBlockBorderWrapper"] .js-plotly-plot,
+      div[data-testid="stVerticalBlockBorderWrapper"] .plot-container,
+      div[data-testid="stVerticalBlockBorderWrapper"] .svg-container,
+      div[data-testid="stVerticalBlockBorderWrapper"] .main-svg {{
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        opacity: 1 !important;
       }}
-      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stSelectbox"] {{
-        margin-bottom: 0 !important;
+      div[data-testid="stVerticalBlockBorderWrapper"] .js-plotly-plot .bg {{
+        fill: #ffffff !important;
       }}
-      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stSelectbox"] > div {{
-        min-height: 2.4rem;
+      div[data-testid="stVerticalBlockBorderWrapper"] p,
+      div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stMarkdown"] {{
+        background: #ffffff !important;
+        background-color: #ffffff !important;
       }}
       [data-testid="stPlotlyChart"] {{
-        margin-bottom: 0 !important;
+        margin: 0 !important;
         background: #ffffff !important;
+        background-color: #ffffff !important;
       }}
       [data-testid="stPlotlyChart"] > div {{
         height: {CHART_HEIGHT}px !important;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+      }}
+      [data-testid="stCaption"] {{
+        margin-top: 0 !important;
+        font-size: 0.72rem !important;
+      }}
+      .stProgress {{
+        margin-top: 0.1rem !important;
+        margin-bottom: 0.15rem !important;
       }}
       .stButton > button {{
         border: 1.5px solid {BURGUNDY};
@@ -156,9 +259,6 @@ st.markdown(
         border-radius: 8px;
         font-weight: 600;
       }}
-      @media (max-width: 900px) {{
-        .block-container {{ padding-top: 0.8rem !important; }}
-      }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -166,7 +266,6 @@ st.markdown(
 
 
 def _api_key() -> str | None:
-    """Return the OpenWeatherMap API key, or None if missing."""
     try:
         return st.secrets["OPENWEATHER_API_KEY"]
     except Exception:
@@ -181,20 +280,11 @@ def _format_date_label(iso_date: str) -> str:
         return iso_date
 
 
-def _condition_label(score: float) -> str:
-    if score >= 80:
-        return "Good conditions"
-    if score >= 60:
-        return "Fair conditions"
-    return "Challenging conditions"
-
-
 def _parse_hhmm(value: str) -> time:
     return datetime.strptime(value, "%H:%M").time()
 
 
 def _booked_within_window(booked: str, start: str, end: str) -> bool:
-    """True if booked time falls in [start, end), handling midnight wrap."""
     b = _parse_hhmm(booked)
     s = _parse_hhmm(start)
     e = _parse_hhmm(end)
@@ -203,58 +293,70 @@ def _booked_within_window(booked: str, start: str, end: str) -> bool:
     return b >= s or b < e
 
 
-def _chart_header(title: str) -> None:
-    """Fixed-height title so cards in a row stay aligned."""
-    st.markdown(f'<p class="sw-chart-title">{title}</p>', unsafe_allow_html=True)
+def _clock(hour) -> str:
+    return hour.time_text.split(" ")[1][:5]
+
+
+def _hour_at(scored, start_clock: str):
+    """Return the scored hour that starts the best window."""
+    for item in scored:
+        if _clock(item.hour) == start_clock:
+            return item
+    return scored[0]
+
+
+def _chart_head(title: str, subtitle: str = "") -> None:
+    """Chart title + subtitle on a white background."""
+    extra = f'<p class="sw-chart-sub">{subtitle}</p>' if subtitle else ""
+    st.markdown(
+        f'<div class="sw-chart-head">'
+        f'<p class="sw-chart-name">{title}</p>'
+        f"{extra}</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def _show_chart(fig) -> None:
     st.plotly_chart(
         fig,
         use_container_width=True,
-        config={"displayModeBar": False},
+        theme=None,
+        config={
+            "displayModeBar": False,
+            "scrollZoom": False,
+            "doubleClick": False,
+            "showTips": False,
+        },
     )
 
 
 @st.cache_data(ttl=600, show_spinner=False)
-def _score_city(
-    city: str,
-    shoot_type: str,
-    shoot_date: str,
-    api_key: str,
-) -> dict[str, float] | None:
-    """Return {HH:MM: score} for one city, or None if the forecast failed."""
+def _score_city(city: str, shoot_type: str, shoot_date: str, api_key: str):
     try:
         client = OpenWeatherClient(api_key=api_key)
         forecast = client.get_forecast(city)
         scored = score_forecast(forecast, shoot_type, shoot_date)
         return {
-            hour.time_text.split(" ")[1][:5]: round(score, 1)
-            for hour, score in scored
+            _clock(item.hour): item.display_score
+            for item in scored
         }
     except WeatherError:
         return None
 
 
-def _build_city_matrix(
-    cities: list[str],
-    shoot_type: str,
-    shoot_date: str,
-    api_key: str,
-    hour_columns: list[str],
-) -> dict[str, dict[str, float | None]]:
-    matrix: dict[str, dict[str, float | None]] = {}
-    for city in cities:
-        scored = _score_city(city, shoot_type, shoot_date, api_key)
+def _build_city_matrix(cities, shoot_type, shoot_date, api_key, hour_columns):
+    matrix = {}
+    for city_name in cities:
+        scored = _score_city(city_name, shoot_type, shoot_date, api_key)
         if scored is None:
-            matrix[city] = {h: None for h in hour_columns}
+            matrix[city_name] = {h: None for h in hour_columns}
         else:
-            matrix[city] = {h: scored.get(h) for h in hour_columns}
+            matrix[city_name] = {h: scored.get(h) for h in hour_columns}
     return matrix
 
 
 # ------------------------------------------------------------
-# Guard: user must come from the home form first
+# Guard
 # ------------------------------------------------------------
 if not st.session_state.get("plan_ready"):
     st.warning("Start on the home page — choose a session, then press Plan shoot.")
@@ -263,29 +365,25 @@ if not st.session_state.get("plan_ready"):
     st.stop()
 
 city = st.session_state["city"]
-shoot_date = st.session_state["shoot_date"]  # ISO string YYYY-MM-DD
-preferred_time = st.session_state["preferred_time"]  # "HH:MM"
-shoot_type = st.session_state["shoot_type"]
+shoot_date = st.session_state["shoot_date"]
+preferred_time = st.session_state["preferred_time"]
+shoot_type = str(st.session_state["shoot_type"]).lower()
+if shoot_type not in SHOOT_TYPES:
+    shoot_type = SHOOT_TYPES[0]
 
 # ------------------------------------------------------------
-# Brand header
+# Header
 # ------------------------------------------------------------
 brand_left, brand_right = st.columns([2.2, 1.2])
 with brand_left:
     if LOGO_PATH.exists():
         c_logo, c_name = st.columns([0.18, 1.2])
         with c_logo:
-            st.image(str(LOGO_PATH), width=42)
+            st.image(str(LOGO_PATH), width=36)
         with c_name:
-            st.markdown(
-                '<div class="sw-brand">Shoot Window</div>',
-                unsafe_allow_html=True,
-            )
+            st.markdown('<div class="sw-brand">Shoot Window</div>', unsafe_allow_html=True)
     else:
-        st.markdown(
-            '<div class="sw-brand">Shoot Window</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown('<div class="sw-brand">Shoot Window</div>', unsafe_allow_html=True)
 with brand_right:
     st.markdown(
         '<div class="sw-tagline">Outdoor photography, planned.</div>',
@@ -293,25 +391,7 @@ with brand_right:
     )
 
 # ------------------------------------------------------------
-# Title + edit
-# ------------------------------------------------------------
-title_left, title_right = st.columns([3.4, 1])
-with title_left:
-    st.title("Your shoot plan")
-    date_label = _format_date_label(shoot_date)
-    st.markdown(
-        f'<p class="sw-caption">{city}  ·  {date_label}  ·  '
-        f'{shoot_type.capitalize()}</p>',
-        unsafe_allow_html=True,
-    )
-with title_right:
-    if st.button("✎ Edit session", use_container_width=True):
-        st.session_state["plan_ready"] = False
-        # Keep city / date / time / type so the form can restore them.
-        st.switch_page("app.py")
-
-# ------------------------------------------------------------
-# Fetch selected-city forecast + score
+# Load forecast
 # ------------------------------------------------------------
 api_key = _api_key()
 if not api_key:
@@ -339,126 +419,222 @@ if not scored or window is None:
     st.stop()
 
 start, end, best_score = window
+booked = score_booked_interval(scored, shoot_date, preferred_time)
 within_window = _booked_within_window(preferred_time, start, end)
-booked_sub = (
-    "Within the recommended window."
-    if within_window
-    else "Outside the recommended window."
-)
+window_hour = _hour_at(scored, start)
+date_label = _format_date_label(shoot_date)
+weights = SHOOT_WEIGHTS[shoot_type]
+
+if window.status == STATUS_UNAVAILABLE:
+    score_value = "—"
+    score_sub = "Unavailable — missing forecast inputs."
+elif window.status == STATUS_NOT_RECOMMENDED:
+    score_value = f"{window.score} / 100"
+    score_sub = "Not recommended"
+else:
+    score_value = f"{window.score} / 100"
+    score_sub = condition_label(window.score, window.status)
+
+if booked is None:
+    booked_sub = "No overlapping forecast for that booking."
+elif booked.status == STATUS_NOT_RECOMMENDED:
+    booked_sub = "Not recommended"
+elif within_window:
+    booked_sub = "Within the recommended window"
+else:
+    booked_sub = "Outside the recommended window"
 
 # ------------------------------------------------------------
-# Summary cards
+# Layout: explain (left) | plan + charts (right)
 # ------------------------------------------------------------
-col_score, col_window, col_booked = st.columns(3)
-with col_score:
-    st.markdown(
-        f"""
-        <div class="sw-card">
-          <div class="sw-card-label">Photography Score</div>
-          <div class="sw-card-value">{best_score} / 100</div>
-          <div class="sw-card-sub">{_condition_label(best_score)}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+left, right = st.columns([0.78, 2.45], gap="medium")
+
+with left:
+    st.caption("PHOTOGRAPHY TYPE")
+    chosen = st.selectbox(
+        "Photography type",
+        list(SHOOT_TYPES),
+        index=list(SHOOT_TYPES).index(shoot_type),
+        format_func=str.capitalize,
+        label_visibility="collapsed",
     )
-with col_window:
-    st.markdown(
-        f"""
-        <div class="sw-card">
-          <div class="sw-card-label">Best shooting window</div>
-          <div class="sw-card-value">{start} – {end}</div>
-          <div class="sw-card-sub">Highest-rated window for your shoot.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with col_booked:
-    st.markdown(
-        f"""
-        <div class="sw-card">
-          <div class="sw-card-label">Your booked time</div>
-          <div class="sw-card-value">{preferred_time}</div>
-          <div class="sw-card-sub">{booked_sub}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    if chosen != shoot_type:
+        st.session_state["shoot_type"] = chosen
+        st.rerun()
 
-# ------------------------------------------------------------
-# Charts 2×2 — same card size, same header row, same plot height
-# ------------------------------------------------------------
-hour_columns = [hour.time_text.split(" ")[1][:5] for hour, _ in scored]
+    if window.status == STATUS_UNAVAILABLE:
+        st.markdown(f"### {score_value}")
+    else:
+        st.markdown(f"### {window.score} / 100")
+    st.caption(score_sub)
+    if window.status != STATUS_UNAVAILABLE:
+        st.progress(window.score / 100)
+        st.caption(f"Score vs perfect 100 · {window.score}%")
 
-filter_options = ["All cities", *ISRAEL_CITIES]
-city_filter = st.session_state.get("heatmap_city_filter", "All cities")
-
-top_left, top_right = st.columns(2, gap="medium", vertical_alignment="top")
-with top_left:
-    with st.container(border=True):
-        head_l, head_r = st.columns([1.7, 1.1], vertical_alignment="center")
-        with head_l:
-            _chart_header("Photography Score throughout the day")
-        with head_r:
-            st.markdown('<p class="sw-chart-title">&nbsp;</p>', unsafe_allow_html=True)
-        _show_chart(
-            photography_score_chart(
-                scored,
-                window_start=start,
-                window_end=end,
-                booked_time=preferred_time,
-            )
-        )
-
-with top_right:
-    with st.container(border=True):
-        head_l, head_r = st.columns([1.7, 1.1], vertical_alignment="center")
-        with head_l:
-            _chart_header("City scores by hour")
-        with head_r:
-            city_filter = st.selectbox(
-                "Cities",
-                filter_options,
-                index=filter_options.index(city_filter)
-                if city_filter in filter_options
-                else 0,
-                label_visibility="collapsed",
-                key="heatmap_city_filter",
-            )
-        if city_filter == "All cities":
-            visible = [city] + [c for c in ISRAEL_CITIES if c != city]
+    st.markdown("**WHAT SHAPED IT**")
+    for name in FACTOR_NAMES:
+        suit = getattr(window_hour, name)
+        weight_pct = int(round(weights[name] * 100))
+        label = FACTOR_LABELS[name]
+        if suit is None:
+            st.caption(f"{label}  ·  —  ·  +{weight_pct}%")
+            st.progress(0)
         else:
-            visible = [city_filter]
+            shown = int(round(suit * 100))
+            st.caption(f"{label}  ·  {shown}  ·  +{weight_pct}%")
+            st.progress(min(1.0, max(0.0, suit)))
 
-        with st.spinner("Comparing cities…"):
-            matrix = _build_city_matrix(
-                visible,
-                shoot_type,
-                shoot_date,
-                api_key,
-                hour_columns,
-            )
-        _show_chart(
-            city_scores_heatmap(
-                matrix,
-                selected_city=city,
-                hour_columns=hour_columns,
-            )
+    st.caption(TYPE_WHY[shoot_type])
+
+    st.markdown(
+        f"""
+        <div class="sw-mean">
+          <strong>WHAT YOUR SCORE MEANS</strong><br>
+          80–100 · Good — well suited to {shoot_type}.<br>
+          60–79 · Fair — workable, you may need tweaks.<br>
+          0–59 · Challenging — consider another time.<br>
+          <em>A planning guide based on the forecast — not a guarantee of the final photos.</em>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.expander("How your Photography Score works"):
+        st.markdown(
+            f"""
+**{shoot_type.capitalize()}** (the type you chose)
+
+Your score combines five factors: light, rain, wind, comfort, and visibility.
+For this session they are weighted:
+
+**{TYPE_WEIGHT_TEXT[shoot_type]}**
+
+{TYPE_WHY[shoot_type]}
+
+Each profile’s weights total **100%**. Cloud cover is included in the
+**light** factor, together with the sun’s position — there is no extra
+cloud weight.
+
+The recommended window looks at the **full 3-hour session**, with extra
+attention to weaker periods. Time itself does not get its own weight.
+Heavy rain, strong wind, or very uncomfortable temperature can **cap**
+the score even if other factors look good.
+            """
         )
 
-bot_left, bot_right = st.columns(2, gap="medium", vertical_alignment="top")
-with bot_left:
-    with st.container(border=True):
-        head_l, head_r = st.columns([1.7, 1.1], vertical_alignment="center")
-        with head_l:
-            _chart_header("Temperature")
-        with head_r:
-            st.markdown('<p class="sw-chart-title">&nbsp;</p>', unsafe_allow_html=True)
-        _show_chart(temperature_chart(scored))
-with bot_right:
-    with st.container(border=True):
-        head_l, head_r = st.columns([1.7, 1.1], vertical_alignment="center")
-        with head_l:
-            _chart_header("Rain probability")
-        with head_r:
-            st.markdown('<p class="sw-chart-title">&nbsp;</p>', unsafe_allow_html=True)
-        _show_chart(rain_probability_chart(scored))
+with right:
+    title_left, title_right = st.columns([3.4, 1.1])
+    with title_left:
+        st.markdown(
+            '<h1>Your shoot plan '
+            '<span class="sw-ready">READY</span></h1>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<p class="sw-caption">{city}  ·  {date_label}  ·  '
+            f"{shoot_type.capitalize()}</p>",
+            unsafe_allow_html=True,
+        )
+    with title_right:
+        if st.button("✎ Edit session", use_container_width=True):
+            st.session_state["plan_ready"] = False
+            st.switch_page("app.py")
+
+    col_score, col_window, col_booked = st.columns(3)
+    with col_score:
+        st.markdown(
+            f"""
+            <div class="sw-card">
+              <div class="sw-card-label">Photography score</div>
+              <div class="sw-card-value">{score_value}</div>
+              <div class="sw-card-sub">{score_sub}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with col_window:
+        st.markdown(
+            f"""
+            <div class="sw-card sw-card-teal">
+              <div class="sw-card-label">Best shooting window</div>
+              <div class="sw-card-value">{start} – {end}</div>
+              <div class="sw-card-sub">Highest-rated light and weather</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with col_booked:
+        st.markdown(
+            f"""
+            <div class="sw-card sw-card-peach">
+              <div class="sw-card-label">Your booked time</div>
+              <div class="sw-card-value">{preferred_time}</div>
+              <div class="sw-card-sub">{booked_sub}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    hour_columns = [_clock(hour) for hour, _ in scored]
+    filter_options = ["All cities", *ISRAEL_CITIES]
+    city_filter = st.session_state.get("heatmap_city_filter", "All cities")
+    if city_filter not in filter_options:
+        city_filter = "All cities"
+    if city_filter == "All cities":
+        visible_cities = [city] + [c for c in ISRAEL_CITIES if c != city]
+    else:
+        visible_cities = [city_filter]
+
+    city_matrix = _build_city_matrix(
+        visible_cities,
+        shoot_type,
+        shoot_date,
+        api_key,
+        hour_columns,
+    )
+
+    top_left, top_right = st.columns(2, gap="small")
+    with top_left:
+        with st.container(border=True):
+            _chart_head(
+                "Photography score throughout the day",
+                "Light, weather, and timing combined",
+            )
+            _show_chart(
+                photography_score_chart(
+                    scored,
+                    window_start=start,
+                    window_end=end,
+                    booked_time=preferred_time,
+                )
+            )
+    with top_right:
+        with st.container(border=True):
+            head_l, head_r = st.columns([1.6, 1], vertical_alignment="center")
+            with head_l:
+                _chart_head("City scores by hour", "Compare nearby locations")
+            with head_r:
+                st.selectbox(
+                    "Cities",
+                    filter_options,
+                    index=filter_options.index(city_filter),
+                    label_visibility="collapsed",
+                    key="heatmap_city_filter",
+                )
+            _show_chart(
+                city_scores_heatmap(
+                    city_matrix,
+                    selected_city=city,
+                    hour_columns=hour_columns,
+                )
+            )
+
+    bot_left, bot_right = st.columns(2, gap="small")
+    with bot_left:
+        with st.container(border=True):
+            _chart_head("Temperature", "Comfort range across the session day")
+            _show_chart(temperature_chart(scored))
+    with bot_right:
+        with st.container(border=True):
+            _chart_head("Rain probability", "Rain chance across the session day")
+            _show_chart(rain_probability_chart(scored))

@@ -44,6 +44,9 @@ def test_first_slot_metrics() -> None:
     assert hour.rain_probability == 0.05
     assert hour.rain_mm == 0.0
     assert hour.icon == "02d"
+    assert hour.visibility_m == 10000
+    assert hour.weather_id == 801
+    assert hour.wind_gust_ms is None
 
 
 # TODO (STUDENT): After from_slot_json handles missing/present rain, delete this skip.

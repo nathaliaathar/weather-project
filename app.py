@@ -23,29 +23,15 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 
-# WHY THIS EXISTS:
-# streamlit turns this Python file into a web page.
 import streamlit as st  # KEEP
+
+from photo_planner.validation import ISRAEL_CITIES, SHOOT_TYPES
 
 st.set_page_config(  # KEEP — browser tab title and wide layout
     page_title="Shoot Window — photography planner",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-
-# KEEP — common outdoor-shoot locations. You may add more later.
-ISRAEL_CITIES = [  # KEEP
-    "Tel Aviv",
-    "Jerusalem",
-    "Haifa",
-    "Herzliya",
-    "Eilat",
-    "Netanya",
-    "Caesarea",
-    "Akko",
-]
-
-SHOOT_TYPES = ("portrait", "sunset", "landscape")
 
 
 def _default_city() -> str:
@@ -131,7 +117,7 @@ with col_hero:
 
     st.markdown(
         '<p style="text-align:center; font-size:14px; color:#8a7a70; margin-top:0.25rem;">'
-        "Portrait · Sunset · Landscape"
+        "Portrait · Event · Sunset · Landscape"
         "</p>",
         unsafe_allow_html=True,
     )
