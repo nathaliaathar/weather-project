@@ -283,7 +283,7 @@ def cover(role: str, subtitle: str, banner: Color, S) -> list:
         ),
         Spacer(1, 3 * mm),
         p(
-            "Fill the <b># TODO (STUDENT)</b> comments. Do not copy a finished weather app. "
+            "Do not copy a finished weather app. Write the core logic yourselves. "
             "One owner per file.",
             S["Small"],
         ),

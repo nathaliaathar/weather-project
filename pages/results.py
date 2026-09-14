@@ -1,10 +1,4 @@
-# ============================================================
-# WHAT THIS FILE DOES
-# ============================================================
-# RESULTS page: score, best window, booked time, and charts.
-# Left column explains HOW the score was built for the type
-# the photographer chose. Right column is the plan + charts.
-# ============================================================
+"""Results page: Photography Score, best window, booked time, and charts."""
 
 from __future__ import annotations
 

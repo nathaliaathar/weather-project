@@ -349,7 +349,7 @@
 
       <div class="callout warn">
         <strong>Do not copy a finished weather app</strong>
-        This is not a weather checker anymore. Fill the TODO comments in photo_planner/. Inspiration is for layout ideas only.
+        This is not a weather checker anymore. Build the photography decision tool in photo_planner/. Inspiration is for layout ideas only.
       </div>
     </section>
 
@@ -404,7 +404,7 @@
 
     <section id="files" class="panel" hidden>
       <h2>Which file do I type in?</h2>
-      <p>Starter files are already there. You fill the TODO sections. The old weather_checker package is gone. Use photo_planner/.</p>
+      <p>Work in photo_planner/ and app.py. The old weather_checker package is gone.</p>
       <table>
         <thead><tr><th>If your task is…</th><th>Open this file</th><th>Who</th></tr></thead>
         <tbody>
@@ -605,7 +605,7 @@
         "Task: Turn failed requests into clear errors. How: 401 → InvalidApiKeyError, 404 → CityNotFoundError, other failures → WeatherRequestError. Done when: a fake city raises CityNotFoundError instead of crashing.",
         "Task: Keep only hours on the booked date. How: fill hours_on_date in scoring.py. Sample date 2026-09-04 should keep 4 slots and drop 2026-09-05. Done when: that filter matches tests/test_scoring.py.",
         "Task: Write photography_score (0–100). How: convert rain, wind, temperature, clouds into goodness scores, then combine with SHOOT_WEIGHTS. There is no single correct formula — use the weights you agreed with Dafna. Done when: the function returns a number between 0 and 100.",
-        "Task: Write score_forecast and best_shooting_window. How: follow the TODOs in scoring.py. MVP window = the single best 3-hour slot. Done when: scoring tests pass after you remove skip.",
+        "Task: Write score_forecast and best_shooting_window. How: implement them in scoring.py. MVP window = the single best 3-hour slot. Done when: scoring tests pass.",
         "Task: Turn tests on and make them pass. How: delete @pytest.mark.skip in tests/ after each function works. From weather-project/ run pytest. Done when: pytest reports passed, not skipped."
       ],
       b: [

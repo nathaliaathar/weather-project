@@ -1,20 +1,8 @@
-# ============================================================
-# WHAT THIS FILE DOES
-# ============================================================
-# This file builds interactive charts from scored forecast hours.
-#
-# WHY WE KEEP THIS SEPARATE:
-# Drawing charts is a different job from talking to the API
-# and from computing the Photography Score.
-# app.py will call these functions and pass the result to
-# st.plotly_chart(...). This file never calls the API.
-#
-# Person B owns this file.
-# ============================================================
+"""Interactive Plotly charts built from scored forecast hours."""
 
 from __future__ import annotations
 
-from photo_planner.models import HourlyConditions  # KEEP
+from photo_planner.models import HourlyConditions
 from photo_planner.scoring import display_score
 
 import plotly.express as px

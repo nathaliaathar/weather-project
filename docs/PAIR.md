@@ -39,8 +39,6 @@ Then it should:
 
 If the city does not exist, the page shows a clear error instead of crashing.
 
-You fill in the `# TODO (STUDENT)` comments. The starter files are not the finished app.
-
 Weather is the input. The product is the score and the recommendation.
 
 Build **one page** in Streamlit. Target the mockup below. Do not invent extra screens.
@@ -209,7 +207,7 @@ Same pattern for a missing API key: `st.error("Missing API key. Copy .env.exampl
 ### How this maps to files
 
 ```text
-Inputs on the mockup     →  already in app.py (KEEP)
+Inputs on the mockup     →  already in app.py
 Score / window numbers   →  scoring.py (Person A), displayed in app.py (Person B)
 Recommendation sentence  →  app.py (Person B) using the score
 Three charts             →  charts.py (Person B), shown with st.plotly_chart
@@ -281,7 +279,7 @@ Person B: follow this mockup in Step 8. Do not parse JSON to invent extra widget
 
 **Your task:** clean the city name and shoot type, then send the live forecast from Python files (not the notebook).
 
-**How:** fill `normalize_city_name` and `normalize_shoot_type`, then `get_forecast` in `client.py` (`requests.get`, check status codes, return a `ForecastReport`). Follow the TODO comments in those files.
+**How:** fill `normalize_city_name` and `normalize_shoot_type`, then `get_forecast` in `client.py` (`requests.get`, check status codes, return a `ForecastReport`).
 
 **Done when:** `pytest` for models/validation passes and `get_forecast` works for Tel Aviv. **Who:** Role A.
 
@@ -424,7 +422,7 @@ Each line is one job. Do them in order. One at a time.
 - [ ] **Task:** Turn failed requests into clear errors. **How:** 401 → `InvalidApiKeyError`, 404 → `CityNotFoundError`, other failures → `WeatherRequestError`.
 - [ ] **Task:** Filter hours to the booked date. **How:** fill `hours_on_date` (sample date `2026-09-04` should keep 4 slots).
 - [ ] **Task:** Write `photography_score`. **How:** convert each weather field to a 0–100 goodness, then combine with `SHOOT_WEIGHTS`.
-- [ ] **Task:** Write `score_forecast` and `best_shooting_window`. **How:** follow the TODOs in `scoring.py`. MVP = best single 3-hour slot.
+- [ ] **Task:** Write `score_forecast` and `best_shooting_window`. **How:** implement them in `scoring.py`. MVP = best single 3-hour slot.
 - [ ] **Task:** Turn tests on and make them pass. **How:** delete `@pytest.mark.skip` after each function works, then run `pytest` from `weather-project/`.
 
 ### Role B — the web page
@@ -447,4 +445,4 @@ Each line is one job. Do them in order. One at a time.
 - Follow the page mockup; do not add screens that are not on it
 - One owner per file
 - Decide score weights together; do not download a "perfect" formula
-- Fill `# TODO (STUDENT)` yourself — the starter comments are not the solution
+- Write the core logic yourselves — do not copy a finished weather app

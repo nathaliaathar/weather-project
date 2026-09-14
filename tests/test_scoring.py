@@ -1,10 +1,4 @@
-# ============================================================
-# WHAT THIS FILE DOES
-# ============================================================
-# Tests for the Photography Score: weights, bounds, labels,
-# sunset timing, rain/wind penalties, and complete-session
-# selection. Uses data/sample_forecast.json plus synthetic hours.
-# ============================================================
+"""Tests for Photography Score: weights, bounds, labels, and session selection."""
 
 from __future__ import annotations
 
@@ -82,6 +76,8 @@ def _hour_score(
     wind_suit: float = 1.0,
     comfort_suit: float = 1.0,
     status: str = "ok",
+    sun_height: float | None = None,
+    is_afternoon: bool | None = None,
 ) -> HourScore:
     caps = {
         "light": 100.0,
@@ -102,6 +98,8 @@ def _hour_score(
         visibility=1.0,
         weights=dict(SHOOT_WEIGHTS["portrait"]),
         caps=caps,
+        sun_height=sun_height,
+        is_afternoon=is_afternoon,
     )
 
 
@@ -320,3 +318,58 @@ def test_complete_session_beats_a_single_peak_hour() -> None:
     )
     assert peak is not None
     assert window.raw_score > peak.raw_score
+
+
+def test_best_window_skips_pre_sunrise_even_if_score_is_higher() -> None:
+    """A strong pre-dawn slot must not beat a weaker post-sunrise window."""
+    hours = [
+        _hour_score(
+            "2026-09-04 03:00:00",
+            99.0,
+            sun_height=-25.0,
+            is_afternoon=False,
+        ),
+        _hour_score(
+            "2026-09-04 06:00:00",
+            97.0,
+            sun_height=-4.0,
+            is_afternoon=False,
+        ),
+        _hour_score(
+            "2026-09-04 09:00:00",
+            70.0,
+            sun_height=35.0,
+            is_afternoon=False,
+        ),
+        _hour_score(
+            "2026-09-04 12:00:00",
+            68.0,
+            sun_height=55.0,
+            is_afternoon=False,
+        ),
+    ]
+    window = best_shooting_window(hours, duration_hours=3.0)
+    assert window is not None
+    assert window.start == "09:00"
+    assert window.end == "12:00"
+
+
+def test_best_window_allows_evening_after_sunset() -> None:
+    """Dusk (sun below horizon in the afternoon) remains eligible."""
+    hours = [
+        _hour_score(
+            "2026-09-04 12:00:00",
+            50.0,
+            sun_height=55.0,
+            is_afternoon=False,
+        ),
+        _hour_score(
+            "2026-09-04 18:00:00",
+            88.0,
+            sun_height=-2.0,
+            is_afternoon=True,
+        ),
+    ]
+    window = best_shooting_window(hours, duration_hours=3.0)
+    assert window is not None
+    assert window.start == "18:00"

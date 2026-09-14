@@ -1,32 +1,23 @@
-# ============================================================
-# WHAT THIS FILE DOES
-# ============================================================
-# This is not Python code. It lists the Python libraries
-# (dependencies) another computer must install to run the project.
-#
-# Install them with:
-#     pip install -r requirements.txt
-# ============================================================
+# Python libraries needed to run Shoot Window.
+# Install with: pip install -r requirements.txt
 
-# KEEP — talks to the OpenWeatherMap forecast API over HTTP
+# HTTP client for the OpenWeatherMap forecast API
 requests>=2.32.0
 
-# KEEP — on some Windows setups, Python cannot verify HTTPS with
-# the default cert bundle. This package uses the Windows certificate
-# store so requests.get(...) works (avoids CERTIFICATE_VERIFY_FAILED).
+# On some Windows setups, use the system certificate store for HTTPS
 pip-system-certs>=5.0
 
-# KEEP — loads OPENWEATHER_API_KEY from the .env file on your computer
+# Load OPENWEATHER_API_KEY from a local .env file
 python-dotenv>=1.0.0
 
-# KEEP — turns app.py into a web page
+# Streamlit web UI
 streamlit>=1.39.0
 
-# KEEP — interactive charts (Person B uses this in charts.py)
+# Interactive Plotly charts
 plotly>=5.24.0
 
-# OPTIONAL — handy if you build a small table of hourly scores before plotting
+# Tables used when building chart data
 pandas>=2.2.0
 
-# KEEP — run tests with: pytest
+# Test runner: pytest
 pytest>=8.3.0

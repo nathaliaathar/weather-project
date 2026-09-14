@@ -1,16 +1,8 @@
-# ============================================================
-# WHAT THIS FILE DOES
-# ============================================================
-# Turns forecast hours into a Photography Score (0–100).
-#
-# 87 means "suitability 87 / 100", NOT "87% chance of a good shoot".
-# The numbers below are first product guesses. Change them later
-# after photographer feedback — you should not need to rewrite
-# the formulas, only the constants.
-#
-# Missing data  → status "unavailable" (not a score of 0)
-# Dangerous weather → status "not_recommended"
-# ============================================================
+"""Photography Score (0–100) and best shooting window from forecast hours.
+
+87 means suitability 87 / 100, not "87% chance of a good shoot".
+Missing data → status "unavailable". Dangerous weather → "not_recommended".
+"""
 
 from __future__ import annotations
 
@@ -229,14 +221,14 @@ def light_suitability(
         mixed = 0.60 * mixed + 0.40 * 0.70
     return clamp(mixed)
 
-
+# this function calculates the suitability of the rain factor: it returns a value between 0 and 1
 def rain_suitability(rain_probability: float, rain_mm: float) -> float:
     """Higher chance or more mm → lower suitability."""
     chance_ok = 1.0 - clamp(rain_probability, 0.0, 1.0)
     amount_ok = clamp(1.0 - max(0.0, rain_mm) / RAIN_MM_FOR_ZERO)
     return clamp(RAIN_CHANCE_WEIGHT * chance_ok + RAIN_MM_WEIGHT * amount_ok)
 
-
+# this function calculates the suitability of the wind factor: it returns a value between 0 and 1
 def wind_suitability(wind_speed: float, wind_gust: float | None) -> float:
     """Stronger wind (and gusts) → lower suitability. Units: m/s."""
     speed = max(0.0, wind_speed)
@@ -248,7 +240,7 @@ def wind_suitability(wind_speed: float, wind_gust: float | None) -> float:
         return 0.0
     return 1.0 - (speed - WIND_CALM_MS) / (WIND_BAD_MS - WIND_CALM_MS)
 
-
+# this function calculates the suitability of the comfort factor: it returns a value between 0 and 1
 def comfort_suitability(feels_like_c: float) -> float:
     """1.0 inside 18–26°C, then a straight fade toward 0°C or 40°C."""
     temp = feels_like_c
@@ -258,12 +250,12 @@ def comfort_suitability(feels_like_c: float) -> float:
         return clamp((temp - COMFORT_ZERO_LOW_C) / (COMFORT_LOW_C - COMFORT_ZERO_LOW_C))
     return clamp((COMFORT_ZERO_HIGH_C - temp) / (COMFORT_ZERO_HIGH_C - COMFORT_HIGH_C))
 
-
+# this function calculates the suitability of the visibility factor: it returns a value between 0 and 1
 def visibility_suitability(visibility_m: float) -> float:
     """Clearer air scores higher. 10000 m is treated as fully clear."""
     return clamp(visibility_m / VISIBILITY_FULL_M)
 
-
+# this function calculates the caps for the factors: it returns a dictionary with the caps for the factors
 def factor_caps(light: float, rain: float, wind: float, comfort: float) -> dict[str, float]:
     return {
         "light": LIGHT_CAP_BASE + LIGHT_CAP_SPAN * light,
@@ -291,6 +283,9 @@ class HourScore:
     visibility: float | None
     weights: dict[str, float]
     caps: dict[str, float] = field(default_factory=dict)
+    # Sun position at this slot (for best-window daylight filter).
+    sun_height: float | None = None
+    is_afternoon: bool | None = None
 
     @property
     def display_score(self) -> int | None:
@@ -461,6 +456,8 @@ def photography_score_breakdown(
         visibility=visibility,
         weights=weights,
         caps=caps,
+        sun_height=sun_height,
+        is_afternoon=is_afternoon,
     )
 
 
@@ -597,19 +594,40 @@ def score_session(
     return session_from_slots(hour_scores[start_index:start_index + n_slots])
 
 
+def starts_after_sunrise(item: HourScore) -> bool:
+    """
+    True when this slot is at/after sunrise that day.
+
+    Pre-dawn (sun below horizon, still morning) → False.
+    Daylight, or evening after sunset → True (sunset shoots need dusk).
+    Unknown sun position → True (do not block synthetic / incomplete data).
+    """
+    if item.sun_height is None or item.is_afternoon is None:
+        return True
+    if item.sun_height >= 0.0:
+        return True
+    return bool(item.is_afternoon)
+
+
 def best_shooting_window(
     scored_hours: list[HourScore],
     *,
     duration_hours: float | None = None,
 ) -> SessionScore | None:
-    """Best complete run of consecutive slots — not the single highest hour."""
+    """Best complete run of consecutive slots — not the single highest hour.
+
+    Only considers sessions that start at or after sunrise (skips pre-dawn).
+    """
     if not scored_hours:
         return None
     duration = SESSION_HOURS if duration_hours is None else duration_hours
     n_slots = _slot_count(duration)
     best: SessionScore | None = None
     for i in range(len(scored_hours) - n_slots + 1):
-        session = session_from_slots(scored_hours[i:i + n_slots])
+        group = scored_hours[i:i + n_slots]
+        if not starts_after_sunrise(group[0]):
+            continue
+        session = session_from_slots(group)
         if session is None or session.status == STATUS_UNAVAILABLE:
             continue
         if best is None:

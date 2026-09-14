@@ -1,10 +1,4 @@
-# ============================================================
-# WHAT THIS FILE DOES
-# ============================================================
-# Simple checks so the four charts on the results page stay
-# readable: same height, white background, no zoom, and enough
-# room for the data labels (the little numbers on the chart).
-# ============================================================
+"""Checks that results-page charts stay readable (height, margins, labels)."""
 
 from photo_planner.charts import (
     CHART_HEIGHT,
