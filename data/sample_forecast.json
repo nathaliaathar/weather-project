@@ -1,0 +1,143 @@
+{
+  "cod": "200",
+  "message": 0,
+  "cnt": 5,
+  "list": [
+    {
+      "dt": 1788518400,
+      "main": {
+        "temp": 31.2,
+        "feels_like": 33.0,
+        "temp_min": 30.4,
+        "temp_max": 31.8,
+        "pressure": 1011,
+        "humidity": 62
+      },
+      "weather": [
+        {
+          "id": 801,
+          "main": "Clouds",
+          "description": "few clouds",
+          "icon": "02d"
+        }
+      ],
+      "clouds": { "all": 18 },
+      "wind": { "speed": 5.8, "deg": 280 },
+      "visibility": 10000,
+      "pop": 0.05,
+      "sys": { "pod": "d" },
+      "dt_txt": "2026-09-04 12:00:00"
+    },
+    {
+      "dt": 1788529200,
+      "main": {
+        "temp": 29.6,
+        "feels_like": 30.8,
+        "temp_min": 28.9,
+        "temp_max": 30.1,
+        "pressure": 1012,
+        "humidity": 58
+      },
+      "weather": [
+        {
+          "id": 802,
+          "main": "Clouds",
+          "description": "scattered clouds",
+          "icon": "03d"
+        }
+      ],
+      "clouds": { "all": 42 },
+      "wind": { "speed": 7.4, "deg": 270 },
+      "visibility": 10000,
+      "pop": 0.12,
+      "sys": { "pod": "d" },
+      "dt_txt": "2026-09-04 15:00:00"
+    },
+    {
+      "dt": 1788540000,
+      "main": {
+        "temp": 26.4,
+        "feels_like": 26.1,
+        "temp_min": 25.8,
+        "temp_max": 26.9,
+        "pressure": 1013,
+        "humidity": 55
+      },
+      "weather": [
+        {
+          "id": 801,
+          "main": "Clouds",
+          "description": "few clouds",
+          "icon": "02d"
+        }
+      ],
+      "clouds": { "all": 24 },
+      "wind": { "speed": 3.1, "deg": 260 },
+      "visibility": 10000,
+      "pop": 0.02,
+      "sys": { "pod": "d" },
+      "dt_txt": "2026-09-04 18:00:00"
+    },
+    {
+      "dt": 1788550800,
+      "main": {
+        "temp": 24.1,
+        "feels_like": 24.0,
+        "temp_min": 23.6,
+        "temp_max": 24.5,
+        "pressure": 1014,
+        "humidity": 64
+      },
+      "weather": [
+        {
+          "id": 500,
+          "main": "Rain",
+          "description": "light rain",
+          "icon": "10n"
+        }
+      ],
+      "clouds": { "all": 78 },
+      "wind": { "speed": 4.6, "deg": 250 },
+      "visibility": 8000,
+      "pop": 0.61,
+      "rain": { "3h": 1.4 },
+      "sys": { "pod": "n" },
+      "dt_txt": "2026-09-04 21:00:00"
+    },
+    {
+      "dt": 1788633600,
+      "main": {
+        "temp": 27.0,
+        "feels_like": 27.4,
+        "temp_min": 26.5,
+        "temp_max": 27.3,
+        "pressure": 1013,
+        "humidity": 60
+      },
+      "weather": [
+        {
+          "id": 800,
+          "main": "Clear",
+          "description": "clear sky",
+          "icon": "01d"
+        }
+      ],
+      "clouds": { "all": 5 },
+      "wind": { "speed": 2.8, "deg": 300 },
+      "visibility": 10000,
+      "pop": 0.0,
+      "sys": { "pod": "d" },
+      "dt_txt": "2026-09-05 12:00:00"
+    }
+  ],
+  "city": {
+    "id": 293397,
+    "name": "Tel Aviv",
+    "coord": { "lat": 32.0853, "lon": 34.7806 },
+    "country": "IL",
+    "population": 432892,
+    "timezone": 10800,
+    "sunrise": 1788489000,
+    "sunset": 1788534300
+  }
+}

@@ -1,0 +1,16 @@
+# Theme for the Streamlit page (colors and layout).
+# Matches the Shoot Window results mockup palette.
+
+[theme]
+base = "light"
+primaryColor = "#7B3C3C"
+backgroundColor = "#F0F0E4"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#7B3C3C"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

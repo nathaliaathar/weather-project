@@ -1,0 +1,23 @@
+# Python libraries needed to run Shoot Window.
+# Install with: pip install -r requirements.txt
+
+# HTTP client for the OpenWeatherMap forecast API
+requests>=2.32.0
+
+# On some Windows setups, use the system certificate store for HTTPS
+pip-system-certs>=5.0
+
+# Load OPENWEATHER_API_KEY from a local .env file
+python-dotenv>=1.0.0
+
+# Streamlit web UI
+streamlit>=1.39.0
+
+# Interactive Plotly charts
+plotly>=5.24.0
+
+# Tables used when building chart data
+pandas>=2.2.0
+
+# Test runner: pytest
+pytest>=8.3.0
